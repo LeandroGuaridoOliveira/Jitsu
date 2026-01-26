@@ -15,7 +15,14 @@ export default function HomeScreen() {
     const beltName = teamMember ? formatBeltName(teamMember.currentBelt.color) : 'White';
 
     const handleNextClassPress = () => {
-        Alert.alert("Navegação", "Ir para Detalhes da Aula: Jiu-Jitsu Avançado (Gi) - Lá o aluno fará o Check-in");
+        navigation.navigate('ClassDetails', {
+            classId: '123',
+            title: 'Jiu-Jitsu Avançado',
+            instructor: 'Sensei Renato',
+            time: '19:00',
+            tags: ['Gi', 'Advanced'],
+            description: 'Focus on guard passing under pressure.'
+        });
     };
 
     return (

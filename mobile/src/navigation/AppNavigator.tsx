@@ -23,7 +23,7 @@ export default function AppNavigator() {
                     <Stack.Group>
                         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
                         <Stack.Screen name="TeamFeed" component={TeamFeedScreen} />
-                        <Stack.Screen name="ClassDetail" component={ClassDetailScreen} />
+                        <Stack.Screen name="ClassDetails" component={ClassDetailScreen} />
                         <Stack.Screen name="CheckInSuccess" component={CheckInSuccessScreen} options={{ presentation: 'modal' }} />
                     </Stack.Group>
                 ) : (

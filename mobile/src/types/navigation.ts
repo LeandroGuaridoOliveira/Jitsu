@@ -3,6 +3,13 @@ export type RootStackParamList = {
     Register: undefined;
     MainTabs: undefined;
     TeamFeed: undefined;
-    ClassDetail: undefined;
+    ClassDetails: {
+        classId: string;
+        title: string;
+        instructor: string;
+        time: string;
+        description?: string;
+        tags: string[];
+    };
     CheckInSuccess: undefined;
 };

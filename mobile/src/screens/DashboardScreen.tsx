@@ -1,140 +1,146 @@
 import React from 'react';
-import { View, Text, ScrollView, TouchableOpacity, Image, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Dimensions } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useAuthStore } from '../store/authStore';
 import { formatBeltName } from '../utils/beltSystem';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const { width } = Dimensions.get('window');
 
 export default function DashboardScreen() {
     const navigation = useNavigation<any>();
-    const { user, teamMember, logout } = useAuthStore();
+    const { user, teamMember } = useAuthStore();
 
     if (!user) return null;
 
     const beltName = teamMember ? formatBeltName(teamMember.currentBelt.color) : 'White';
-    // const monthsInGrade = teamMember ? calculateTimeInGrade(teamMember.currentBelt.awardedAt) : 0;
+
+    // Quick Actions Data
+    const quickActions = [
+        { id: 1, title: 'My Schedule', icon: 'calendar-outline', route: 'Schedule' },
+        { id: 2, title: 'Techniques', icon: 'book-outline', route: 'Techniques' },
+        { id: 3, title: 'Team Feed', icon: 'people-outline', route: 'TeamFeed' },
+        { id: 4, title: 'Financial', icon: 'card-outline', route: 'Financial' },
+    ];
 
     return (
         <SafeAreaView className="flex-1 bg-slate-900">
             <StatusBar style="light" />
 
-            <ScrollView className="flex-1 px-6 pt-4">
-                {/* Header */}
-                <View className="flex-row justify-between items-center mb-8">
-                    <View className="flex-row items-center">
-                        <View className="relative">
-                            <View className="h-14 w-14 bg-gray-300 rounded-full border-2 border-slate-700 items-center justify-center overflow-hidden">
-                                {/* Avatar Placeholder */}
-                                <Image
-                                    source={{ uri: 'https://i.pravatar.cc/150?u=leandro' }}
-                                    className="h-full w-full"
-                                    resizeMode="cover"
-                                />
-                            </View>
-                            <View className="absolute bottom-0 right-0 h-4 w-4 bg-green-500 rounded-full border-2 border-slate-900" />
-                        </View>
-                        <View className="ml-4">
-                            <Text className="text-white text-xl font-bold">{user.name.split(' ')[0]}</Text>
-                            <View className="bg-blue-600 px-2 py-0.5 rounded self-start mt-1">
-                                <Text className="text-white text-[10px] font-bold uppercase">{beltName} BELT</Text>
-                            </View>
+            <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 40 }}>
+                {/* 1. HEADER */}
+                <View className="px-6 pt-6 pb-6 flex-row justify-between items-center">
+                    <View>
+                        <Text className="text-white text-3xl font-bold">
+                            Hello, {user.name.split(' ')[0]}
+                        </Text>
+                        <View className="bg-blue-900/30 px-3 py-1 rounded-full self-start mt-2 border border-blue-500/20">
+                            <Text className="text-blue-400 text-xs font-bold uppercase tracking-wide">
+                                {beltName} Belt
+                            </Text>
                         </View>
                     </View>
-                    <TouchableOpacity onPress={logout}>
-                        <Ionicons name="notifications" size={28} color="#fca5a5" />
+                    <TouchableOpacity className="relative bg-zinc-800 p-2 rounded-full border border-white/5">
+                        <Ionicons name="notifications-outline" size={24} color="#f8fafc" />
+                        <View className="absolute top-2 right-2 h-2.5 w-2.5 bg-red-600 rounded-full border border-zinc-800" />
                     </TouchableOpacity>
                 </View>
 
-                {/* Check In Button */}
-                <TouchableOpacity
-                    className="bg-red-600 rounded-2xl p-6 flex-row items-center justify-center mb-10 shadow-lg shadow-red-900/50"
-                    onPress={() => navigation.navigate('ClassDetail')}
-                >
-                    <MaterialCommunityIcons name="qrcode-scan" size={42} color="white" />
-                    <View className="ml-4">
-                        <Text className="text-white text-2xl font-bold tracking-wider">CHECK IN</Text>
-                        <Text className="text-red-100 text-xs tracking-widest uppercase">Ready to roll</Text>
-                    </View>
-                </TouchableOpacity>
+                {/* 2. HERO SECTION (NEXT CLASS) */}
+                <View className="px-6 mb-8">
+                    <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">
+                        Next Session
+                    </Text>
 
-                {/* Next Session */}
-                <View className="flex-row justify-between items-end mb-4">
-                    <Text className="text-white text-lg font-bold">Next Session</Text>
-                    <TouchableOpacity>
-                        <Text className="text-red-500 text-sm font-bold">See all</Text>
-                    </TouchableOpacity>
+                    <View className="bg-zinc-900 rounded-3xl overflow-hidden border border-white/5 shadow-xl shadow-black/50">
+                        {/* Class Info */}
+                        <View className="p-6">
+                            <View className="flex-row justify-between items-start mb-1">
+                                <Text className="text-white text-4xl font-bold">19:00</Text>
+                                <View className="bg-zinc-800 px-3 py-1 rounded-md">
+                                    <Text className="text-slate-300 text-xs font-bold uppercase">Today</Text>
+                                </View>
+                            </View>
+
+                            <Text className="text-white text-xl font-bold mb-1">Fundamentals - Gi</Text>
+                            <Text className="text-slate-400 text-sm mb-6">Mat A • Coach Silva</Text>
+                        </View>
+
+                        {/* Action Button */}
+                        <TouchableOpacity
+                            className="bg-red-600 py-5 items-center justify-center active:bg-red-700"
+                            onPress={() => navigation.navigate('ClassDetail')}
+                        >
+                            <Text className="text-white text-lg font-bold tracking-widest uppercase">
+                                Check-In
+                            </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
-                <TouchableOpacity
-                    className="bg-[#2A2323] rounded-2xl p-4 mb-8 flex-row overflow-hidden border border-white/5"
-                    onPress={() => navigation.navigate('ClassDetail')}
-                >
-                    <View className="flex-1 pr-4">
-                        <View className="flex-row items-center mb-3">
-                            <Ionicons name="calendar" size={16} color="#ef4444" />
-                            <Text className="text-gray-400 text-xs font-bold ml-2 uppercase">Today</Text>
+                {/* 3. STATS ROW */}
+                <View className="px-6 mb-8">
+                    <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">
+                        Performance
+                    </Text>
+                    <View className="flex-row justify-between">
+                        {/* Metric 1 */}
+                        <View className="bg-zinc-900 p-4 rounded-xl flex-1 mr-3 border border-zinc-800 items-start">
+                            <Text className="text-white text-2xl font-bold">12/20</Text>
+                            <Text className="text-slate-500 text-[10px] font-bold uppercase mt-1">
+                                Frequency
+                            </Text>
                         </View>
-                        <Text className="text-white text-xl font-bold mb-1">Fundamentals - Gi</Text>
-                        <Text className="text-gray-400 text-sm mb-4">19:00 - 20:30 • Mat A</Text>
 
-                        <View className="flex-row items-center">
-                            <View className="h-6 w-6 bg-gray-600 rounded-full mr-2 overflow-hidden">
-                                <Image source={{ uri: 'https://i.pravatar.cc/150?u=marcus' }} className="h-full w-full" />
-                            </View>
-                            <Text className="text-gray-400 text-sm">Instr. Marcus</Text>
+                        {/* Metric 2 */}
+                        <View className="bg-zinc-900 p-4 rounded-xl flex-1 mr-3 border border-zinc-800 items-start">
+                            <Text className="text-white text-2xl font-bold">18h</Text>
+                            <Text className="text-slate-500 text-[10px] font-bold uppercase mt-1">
+                                Mat Time
+                            </Text>
+                        </View>
+
+                        {/* Metric 3 */}
+                        <View className="bg-zinc-900 p-4 rounded-xl flex-1 border border-zinc-800 items-start">
+                            <Text className="text-white text-2xl font-bold">3</Text>
+                            <Text className="text-slate-500 text-[10px] font-bold uppercase mt-1">
+                                Streak
+                            </Text>
                         </View>
                     </View>
-                    <View className="w-24 bg-zinc-800 rounded-xl overflow-hidden">
-                        {/* Class Image Placeholder */}
-                        <View className="flex-1 bg-zinc-700 items-center justify-center">
-                            <Ionicons name="people" size={32} color="#52525b" />
-                        </View>
-                    </View>
-                </TouchableOpacity>
+                </View>
 
-                {/* Your Progress */}
-                <Text className="text-white text-lg font-bold mb-4">Your Progress</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row pb-8">
-                    {/* Card 1 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="barbell" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">This Month</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">12</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Classes</Text>
-                        </View>
+                {/* 4. QUICK ACTIONS GRID */}
+                <View className="px-6">
+                    <Text className="text-slate-400 text-xs font-bold uppercase tracking-widest mb-3">
+                        Menu
+                    </Text>
+                    <View className="flex-row flex-wrap justify-between">
+                        {quickActions.map((action, index) => (
+                            <TouchableOpacity
+                                key={action.id}
+                                className="bg-zinc-800 w-[48%] aspect-square rounded-2xl p-4 mb-4 justify-between border border-white/5 active:bg-zinc-700/80"
+                                onPress={() => {
+                                    if (action.route) {
+                                        // Simple navigation guard
+                                        try {
+                                            navigation.navigate(action.route);
+                                        } catch (e) {
+                                            console.warn(`Route ${action.route} not found`);
+                                        }
+                                    }
+                                }}
+                            >
+                                <View className="bg-zinc-700/50 w-10 h-10 rounded-full items-center justify-center">
+                                    <Ionicons name={action.icon as any} size={20} color="#e2e8f0" />
+                                </View>
+                                <Text className="text-slate-200 font-semibold">{action.title}</Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
-
-                    {/* Card 2 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="school" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">Techniques</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">4</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Learned</Text>
-                        </View>
-                    </View>
-
-                    {/* Card 3 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="flame" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">Streak</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">3</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Days</Text>
-                        </View>
-                    </View>
-                </ScrollView>
-
-                {/* Team Feed Entry Point (Added back mainly for navigation access, though button in header might be better) */}
-                <TouchableOpacity
-                    className="mb-8 flex-row items-center justify-between"
-                    onPress={() => navigation.navigate('TeamFeed')}
-                >
-                    <Text className="text-white text-lg font-bold">Team Feed</Text>
-                    <Ionicons name="chevron-forward" size={24} color="gray" />
-                </TouchableOpacity>
+                </View>
 
             </ScrollView>
         </SafeAreaView>
