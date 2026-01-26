@@ -1,16 +1,19 @@
 import React from 'react';
+import { View, TouchableOpacity, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import HomeScreen from '../screens/HomeScreen';
 import ScheduleScreen from '../features/schedule/screens/ScheduleScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
+import TeamScreen from '../screens/TeamScreen';
 
 const Tab = createBottomTabNavigator();
+
 
 export default function MainTabNavigator() {
     return (
         <Tab.Navigator
-            screenOptions={({ route }) => ({
+            screenOptions={{
                 headerShown: false,
                 tabBarStyle: {
                     backgroundColor: '#0f172a', // slate-900
@@ -23,29 +26,47 @@ export default function MainTabNavigator() {
                 tabBarInactiveTintColor: '#94a3b8', // slate-400
                 tabBarShowLabel: true,
                 tabBarLabelStyle: {
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: '600',
+                    marginTop: -4
                 },
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName: keyof typeof Ionicons.glyphMap;
-
-                    if (route.name === 'Home') {
-                        iconName = focused ? 'home' : 'home-outline';
-                    } else if (route.name === 'Schedule') {
-                        iconName = focused ? 'calendar' : 'calendar-outline';
-                    } else if (route.name === 'Profile') {
-                        iconName = focused ? 'person' : 'person-outline';
-                    } else {
-                        iconName = 'help';
-                    }
-
-                    return <Ionicons name={iconName} size={size} color={color} />;
-                },
-            })}
+            }}
         >
-            <Tab.Screen name="Home" component={HomeScreen} />
-            <Tab.Screen name="Schedule" component={ScheduleScreen} />
-            <Tab.Screen name="Profile" component={ProfileScreen} />
+            <Tab.Screen
+                name="Home"
+                component={HomeScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="home" size={24} color={color} />,
+                    tabBarLabel: 'Home'
+                }}
+            />
+
+            <Tab.Screen
+                name="Schedule"
+                component={ScheduleScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={24} color={color} />,
+                    tabBarLabel: 'Agenda'
+                }}
+            />
+
+            <Tab.Screen
+                name="Team"
+                component={TeamScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="people" size={24} color={color} />,
+                    tabBarLabel: 'Time'
+                }}
+            />
+
+            <Tab.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{
+                    tabBarIcon: ({ color, size }) => <Ionicons name="person" size={24} color={color} />,
+                    tabBarLabel: 'Perfil'
+                }}
+            />
         </Tab.Navigator>
     );
 }
