@@ -5,4 +5,6 @@ export type RootStackParamList = {
     TeamFeed: undefined;
     ClassDetail: undefined;
     CheckInSuccess: undefined;
+    Schedule: undefined;
+    Profile: undefined;
 };
