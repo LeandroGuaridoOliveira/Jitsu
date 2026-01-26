@@ -13,7 +13,6 @@ export default function HomeScreen() {
     if (!user) return null;
 
     const beltName = teamMember ? formatBeltName(teamMember.currentBelt.color) : 'White';
-    // const monthsInGrade = teamMember ? calculateTimeInGrade(teamMember.currentBelt.awardedAt) : 0;
 
     return (
         <SafeAreaView className="flex-1 bg-slate-900">
@@ -25,7 +24,6 @@ export default function HomeScreen() {
                     <View className="flex-row items-center">
                         <View className="relative">
                             <View className="h-14 w-14 bg-gray-300 rounded-full border-2 border-slate-700 items-center justify-center overflow-hidden">
-                                {/* Avatar Placeholder */}
                                 <Image
                                     source={{ uri: 'https://i.pravatar.cc/150?u=leandro' }}
                                     className="h-full w-full"
@@ -37,7 +35,7 @@ export default function HomeScreen() {
                         <View className="ml-4">
                             <Text className="text-white text-xl font-bold">{user.name.split(' ')[0]}</Text>
                             <View className="bg-blue-600 px-2 py-0.5 rounded self-start mt-1">
-                                <Text className="text-white text-xs font-bold uppercase">{beltName} BELT</Text>
+                                <Text className="text-white text-[10px] font-bold uppercase">{beltName} BELT</Text>
                             </View>
                         </View>
                     </View>
@@ -46,19 +44,7 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Check In Button */}
-                <TouchableOpacity
-                    className="bg-red-600 rounded-2xl p-6 flex-row items-center justify-center mb-10 shadow-lg shadow-red-900/50"
-                    onPress={() => navigation.navigate('ClassDetail')}
-                >
-                    <MaterialCommunityIcons name="qrcode-scan" size={42} color="white" />
-                    <View className="ml-4">
-                        <Text className="text-white text-2xl font-bold tracking-wider">CHECK IN</Text>
-                        <Text className="text-red-100 text-xs tracking-widest uppercase">Ready to roll</Text>
-                    </View>
-                </TouchableOpacity>
-
-                {/* Next Session */}
+                {/* Hero: Next Session (Moved to Top) */}
                 <View className="flex-row justify-between items-end mb-4">
                     <Text className="text-white text-lg font-bold">Next Session</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('Schedule')}>
@@ -67,8 +53,9 @@ export default function HomeScreen() {
                 </View>
 
                 <TouchableOpacity
-                    className="bg-[#2A2323] rounded-2xl p-4 mb-8 flex-row overflow-hidden border border-white/5"
+                    className="bg-[#2A2323] rounded-2xl p-4 mb-6 flex-row overflow-hidden border border-white/5"
                     onPress={() => navigation.navigate('ClassDetail')}
+                    activeOpacity={0.8}
                 >
                     <View className="flex-1 pr-4">
                         <View className="flex-row items-center mb-3">
@@ -86,54 +73,55 @@ export default function HomeScreen() {
                         </View>
                     </View>
                     <View className="w-24 bg-zinc-800 rounded-xl overflow-hidden">
-                        {/* Class Image Placeholder */}
                         <View className="flex-1 bg-zinc-700 items-center justify-center">
                             <Ionicons name="people" size={32} color="#52525b" />
                         </View>
                     </View>
                 </TouchableOpacity>
 
-                {/* Your Progress */}
-                <Text className="text-white text-lg font-bold mb-4">Your Progress</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} className="flex-row pb-8">
-                    {/* Card 1 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="barbell" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">This Month</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">12</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Classes</Text>
-                        </View>
-                    </View>
-
-                    {/* Card 2 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="school" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">Techniques</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">4</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Learned</Text>
-                        </View>
-                    </View>
-
-                    {/* Card 3 */}
-                    <View className="bg-[#1C1C1E] rounded-2xl p-4 w-32 mr-4 border border-zinc-800">
-                        <Ionicons name="flame" size={24} color="#ef4444" className="mb-2" />
-                        <Text className="text-gray-500 text-[10px] font-bold uppercase mt-2">Streak</Text>
-                        <View className="flex-row items-baseline mt-1">
-                            <Text className="text-white text-3xl font-bold">3</Text>
-                            <Text className="text-gray-400 text-xs ml-1">Days</Text>
-                        </View>
-                    </View>
-                </ScrollView>
-
-                {/* Team Feed Entry Point */}
+                {/* Secondary Action: Premium Check-In Button */}
                 <TouchableOpacity
-                    className="mb-8 flex-row items-center justify-between"
+                    className="bg-white rounded-xl p-5 flex-row items-center justify-between mb-10 shadow-lg shadow-black/20"
+                    onPress={() => navigation.navigate('ClassDetail')}
+                    activeOpacity={0.8}
+                >
+                    <View className="flex-row items-center">
+                        <View className="bg-black/5 p-2 rounded-lg mr-4">
+                            <MaterialCommunityIcons name="qrcode-scan" size={28} color="black" />
+                        </View>
+                        <View>
+                            <Text className="text-black text-lg font-bold">Check In</Text>
+                            <Text className="text-gray-500 text-xs font-medium">Have a good training</Text>
+                        </View>
+                    </View>
+                    <Ionicons name="chevron-forward" size={24} color="#D1D5DB" />
+                </TouchableOpacity>
+
+                {/* Team Feed Preview */}
+                <View className="flex-row justify-between items-end mb-4">
+                    <Text className="text-white text-lg font-bold">Team Feed</Text>
+                    <TouchableOpacity onPress={() => navigation.navigate('TeamFeed')}>
+                        <Ionicons name="chevron-forward" size={24} color="gray" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* Simplified Feed Item Preview */}
+                <TouchableOpacity
+                    className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700 flex-row items-start"
                     onPress={() => navigation.navigate('TeamFeed')}
                 >
-                    <Text className="text-white text-lg font-bold">Team Feed</Text>
-                    <Ionicons name="chevron-forward" size={24} color="gray" />
+                    <View className="h-10 w-10 bg-gray-500 rounded-full mr-3 items-center justify-center">
+                        <Text className="text-white font-bold">IM</Text>
+                    </View>
+                    <View className="flex-1">
+                        <View className="flex-row justify-between mb-1">
+                            <Text className="text-white font-bold">Instr. Marcus</Text>
+                            <Text className="text-gray-500 text-xs">2h ago</Text>
+                        </View>
+                        <Text className="text-gray-400 text-sm line-clamp-2" numberOfLines={2}>
+                            Great energy in the morning class! Everyone is sharpening their guard passing. Keep showing up! 🥋🔥
+                        </Text>
+                    </View>
                 </TouchableOpacity>
 
             </ScrollView>
