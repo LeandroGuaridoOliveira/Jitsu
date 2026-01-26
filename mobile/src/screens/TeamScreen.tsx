@@ -43,7 +43,7 @@ export default function TeamScreen() {
                 {
                     text: 'Join with Code',
                     style: 'default',
-                    onPress: () => Alert.alert('Coming Soon', 'Join flow feature.')
+                    onPress: () => navigation.navigate('JoinTeam')
                 },
                 {
                     text: 'Create Team',
@@ -67,13 +67,6 @@ export default function TeamScreen() {
             {/* Logo / Acronym */}
             <View className="w-12 h-12 bg-zinc-800 rounded-full items-center justify-center mr-4 border border-white/10 overflow-hidden">
                 {item.logoUrl ? (
-                    // In a real app we would use <Image source={{ uri: item.logoUrl }} />
-                    // checking if it is a placeholder url or not, for now treating text generation for safety if url logic is complex
-                    // But MockService provides URLs. Let's use the Acronym as fallback or overlay if image fails, 
-                    // or just render the Acronym if that's the requested style for "Logo Placeholder".
-                    // The requirement says: "Display item.acronym (e.g., 'GB-BH') in the logo placeholder IF NO IMAGE EXISTS."
-                    // Since our mock data has logoUrl, we might mistakenly hide the acronym. 
-                    // However, relying on the 'Text' part for the acronym as requested:
                     <Text className="text-slate-500 font-bold text-xs">{item.acronym}</Text>
                 ) : (
                     <Text className="text-slate-500 font-bold text-xs">{item.acronym}</Text>
@@ -99,8 +92,6 @@ export default function TeamScreen() {
                         </Text>
                     </View>
                 ) : item.badgeCount > 0 ? (
-                    // Fallback for just "new posts" badge if no unread messages? 
-                    // Or just render arrow. The requirement specifically asked for unreadMessagesCount logic.
                     <View className="w-2.5 h-2.5 bg-red-600 rounded-full" />
                 ) : (
                     <SimpleLineIcons name="arrow-right" size={16} color="#64748b" />

@@ -16,4 +16,6 @@ export type RootStackParamList = {
     CreateTeam: undefined;
     JoinTeam: undefined;
     TeamContext: { teamId: string };
+    TeamSettings: { teamId: string };
+    TeamInvite: { teamId: string };
 };

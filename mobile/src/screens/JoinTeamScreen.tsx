@@ -43,7 +43,7 @@ export default function JoinTeamScreen() {
 
     // --- Local State ---
     const [teamCode, setTeamCode] = useState('');
-    const [searchResult, setSearchResult] = useState<TeamSearchResult | null>(MOCK_TEAM_RESULT); // Pre-filled for demo/mockup matching
+    const [searchResult, setSearchResult] = useState<TeamSearchResult | null>(null); // Pre-filled for demo/mockup matching
 
     // --- Handlers ---
 
@@ -55,7 +55,8 @@ export default function JoinTeamScreen() {
             return;
         }
         // Logic to fetch team...
-        Alert.alert('Searching', `Looking for team with code: ${teamCode}`);
+        // For verify: Simulate finding the Mock Result
+        setSearchResult(MOCK_TEAM_RESULT);
     };
 
     const handleRequestAccess = () => {
