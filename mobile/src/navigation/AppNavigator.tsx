@@ -9,6 +9,8 @@ import TeamFeedScreen from '../features/community/screens/TeamFeedScreen';
 import TeamInfoScreen from '../features/community/screens/TeamInfoScreen';
 import CheckInSuccessScreen from '../features/checkin/screens/CheckInSuccessScreen';
 import ClassDetailScreen from '../features/schedule/screens/ClassDetailScreen';
+import CreateTeamScreen from '../screens/CreateTeamScreen';
+import TeamContextScreen from '../features/community/screens/TeamContextScreen';
 import { useAuthStore } from '../store/authStore';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -26,6 +28,8 @@ export default function AppNavigator() {
                         <Stack.Screen name="TeamFeed" component={TeamFeedScreen} />
                         <Stack.Screen name="TeamInfo" component={TeamInfoScreen} />
                         <Stack.Screen name="ClassDetails" component={ClassDetailScreen} />
+                        <Stack.Screen name="CreateTeam" component={CreateTeamScreen} />
+                        <Stack.Screen name="TeamContext" component={TeamContextScreen} />
                         <Stack.Screen name="CheckInSuccess" component={CheckInSuccessScreen} options={{ presentation: 'modal' }} />
                     </Stack.Group>
                 ) : (
