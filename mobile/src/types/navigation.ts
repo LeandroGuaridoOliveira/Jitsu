@@ -18,4 +18,5 @@ export type RootStackParamList = {
     TeamContext: { teamId: string };
     TeamSettings: { teamId: string };
     TeamInvite: { teamId: string };
+    Attendance: undefined;
 };

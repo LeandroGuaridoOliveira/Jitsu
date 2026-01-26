@@ -14,6 +14,7 @@ import JoinTeamScreen from '../screens/JoinTeamScreen';
 import TeamContextScreen from '../features/community/screens/TeamContextScreen';
 import TeamSettingsScreen from '../features/community/screens/TeamSettingsScreen';
 import TeamInviteScreen from '../features/community/screens/TeamInviteScreen';
+import AttendanceScreen from '../screens/AttendanceScreen';
 import { useAuthStore } from '../store/authStore';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -36,6 +37,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="TeamInvite" component={TeamInviteScreen} />
                         <Stack.Screen name="TeamSettings" component={TeamSettingsScreen} />
                         <Stack.Screen name="TeamContext" component={TeamContextScreen} />
+                        <Stack.Screen name="Attendance" component={AttendanceScreen} />
                         <Stack.Screen name="CheckInSuccess" component={CheckInSuccessScreen} options={{ presentation: 'modal' }} />
                     </Stack.Group>
                 ) : (
