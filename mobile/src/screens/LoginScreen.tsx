@@ -10,10 +10,22 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Login'>;
 export default function LoginScreen({ navigation }: Props) {
     const { login } = useAuthStore();
 
-    const handleLogin = () => {
-        // Mock login logic
-        console.log('Login Pressed');
-        login(MOCK_USER, MOCK_MEMBER);
+    const handleLogin = (role: 'STUDENT' | 'HEAD_COACH') => {
+        // Mock login logic with dynamic role
+        console.log(`Login Pressed as ${role}`);
+        const member = { ...MOCK_MEMBER, role };
+
+        // If Head Coach, give them a Black Belt for the demo
+        if (role === 'HEAD_COACH') {
+            member.currentBelt = {
+                color: 'BLACK',
+                degrees: 3,
+                awardedAt: '2015-01-01T00:00:00Z',
+                awardedBy: 'master'
+            };
+        }
+
+        login(MOCK_USER, member);
         navigation.replace('Home');
     };
 
@@ -37,12 +49,21 @@ export default function LoginScreen({ navigation }: Props) {
                 secureTextEntry
             />
 
-            <TouchableOpacity
-                className="w-full bg-indigo-600 p-4 rounded-xl items-center shadow-sm"
-                onPress={handleLogin}
-            >
-                <Text className="text-white font-bold text-lg">Entrar</Text>
-            </TouchableOpacity>
+            <View className="w-full gap-y-3">
+                <TouchableOpacity
+                    className="w-full bg-indigo-600 p-4 rounded-xl items-center shadow-sm"
+                    onPress={() => handleLogin('STUDENT')}
+                >
+                    <Text className="text-white font-bold text-lg">Login as Student</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                    className="w-full bg-slate-800 p-4 rounded-xl items-center shadow-sm"
+                    onPress={() => handleLogin('HEAD_COACH')}
+                >
+                    <Text className="text-white font-bold text-lg">Login as Professor</Text>
+                </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
                 className="mt-6"
