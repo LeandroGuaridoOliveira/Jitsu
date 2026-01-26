@@ -341,6 +341,26 @@ export class MockService {
     }
     // --- CLASS DETAILS ---
 
+    // --- CLASS DETAILS & ATTENDANCE ---
+
+    static async findUserByCode(code: string): Promise<User | null> {
+        await this.delay(LATENCY_MS);
+        if (code === 'A1B2-8899') {
+            return {
+                id: 'new_user_1',
+                name: 'Novo Aluno Teste',
+                beltColor: 'WHITE',
+                avatarUrl: 'https://ui-avatars.com/api/?name=Novo+Aluno&background=random'
+            };
+        }
+        return null;
+    }
+
+    static async addStudentToClass(sessionId: string, userId: string): Promise<void> {
+        await this.delay(LATENCY_MS);
+        console.log(`[MOCK] Added user ${userId} to class ${sessionId}`);
+    }
+
     static async getClassDetails(classId: string): Promise<{
         id: string;
         title: string;
@@ -351,7 +371,14 @@ export class MockService {
         status: 'SCHEDULED' | 'COMPLETED' | 'CANCELLED';
         userStatus: 'PRESENT' | 'ABSENT' | 'PENDING' | 'NONE'; // NONE if future
         summary?: string; // For past classes
-        attendanceList?: { name: string; avatarUrl?: string; status: 'PRESENT' | 'ABSENT' }[];
+        attendanceList?: {
+            id: string;
+            name: string;
+            avatarUrl?: string;
+            beltColor: 'WHITE' | 'BLUE' | 'PURPLE' | 'BROWN' | 'BLACK';
+            status: 'PRESENT' | 'ABSENT' | 'PENDING';
+            isVisitor?: boolean;
+        }[];
     }> {
         await this.delay(LATENCY_MS);
 
@@ -370,14 +397,15 @@ export class MockService {
                 userStatus: 'PRESENT',
                 summary: 'Foco em passagens de guarda aberta (DLR e X-Guard). 3 rounds de 5min de rola específico + 3 rounds livres.',
                 attendanceList: [
-                    { name: 'Leandro', avatarUrl: 'https://i.pravatar.cc/150?u=leandro', status: 'PRESENT' },
-                    { name: 'Marcus', avatarUrl: 'https://i.pravatar.cc/150?u=marcus', status: 'PRESENT' },
-                    { name: 'Sarah', avatarUrl: 'https://i.pravatar.cc/150?u=sarah', status: 'ABSENT' },
+                    { id: '1', name: 'Leandro', avatarUrl: 'https://i.pravatar.cc/150?u=leandro', beltColor: 'BLUE', status: 'PRESENT' },
+                    { id: '2', name: 'Marcus', avatarUrl: 'https://i.pravatar.cc/150?u=marcus', beltColor: 'WHITE', status: 'PRESENT' },
+                    { id: '3', name: 'Sarah', avatarUrl: 'https://i.pravatar.cc/150?u=sarah', beltColor: 'PURPLE', status: 'ABSENT' },
+                    { id: '4', name: 'John Doe', beltColor: 'BLUE', status: 'PRESENT', isVisitor: true, avatarUrl: 'https://ui-avatars.com/api/?name=John+Doe&background=random' },
                 ]
             };
         }
 
-        // Future Class
+        // Future Class - With mock data for testing the list
         return {
             id: classId,
             title: 'Jiu-Jitsu Fundamentals',
@@ -387,7 +415,18 @@ export class MockService {
             date: new Date().toISOString(),
             status: 'SCHEDULED',
             userStatus: 'NONE', // Not checked in yet
-            attendanceList: [] // Future usually hides this or shows confirmed count
+            attendanceList: [
+                { id: '10', name: 'Carlos Ribeiro', beltColor: 'BLACK', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=10' },
+                { id: '11', name: 'Fernanda Lima', beltColor: 'BROWN', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=11' },
+                { id: '1', name: 'Leandro Oliveira', beltColor: 'BLUE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=leandro' },
+                { id: '12', name: 'Bruno Santos', beltColor: 'BLUE', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=12' },
+                { id: '13', name: 'Amanda Costa', beltColor: 'WHITE', status: 'ABSENT', avatarUrl: 'https://i.pravatar.cc/150?u=13' },
+                { id: '14', name: 'Visitante Pedro', beltColor: 'PURPLE', status: 'PRESENT', isVisitor: true, avatarUrl: 'https://ui-avatars.com/api/?name=Pedro&background=random' },
+                { id: '15', name: 'Lucas Silva', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=15' },
+                { id: '16', name: 'Maria Souza', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=16' },
+                { id: '17', name: 'Jorge', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=17' },
+                { id: '18', name: 'Ana', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=18' },
+            ]
         };
     }
 }

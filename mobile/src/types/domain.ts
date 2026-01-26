@@ -86,6 +86,7 @@ export interface Attendance {
     checkedInAt: string; // ISO timestamp
     status: 'PRESENT' | 'LATE' | 'EXCUSED';
     verifiedBy?: string; // Professor ID
+    isVisitor?: boolean;
 }
 
 export interface GraduationRecord {
