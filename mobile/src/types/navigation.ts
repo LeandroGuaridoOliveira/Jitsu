@@ -1,10 +1,8 @@
 export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
-    Home: undefined;
+    MainTabs: undefined;
     TeamFeed: undefined;
     ClassDetail: undefined;
     CheckInSuccess: undefined;
-    Schedule: undefined;
-    Profile: undefined;
 };
