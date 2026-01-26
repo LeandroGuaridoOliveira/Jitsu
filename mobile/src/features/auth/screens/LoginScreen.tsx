@@ -3,6 +3,24 @@ import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
 import { useAuthStore } from '../../../store/authStore';
+import { User, TeamMember } from '../../../types/domain';
+
+// Mock Data for Testing
+const TEST_USER: User = {
+    id: 'test-user',
+    name: 'Test User',
+    email: 'test@jitsu.com',
+    createdAt: new Date().toISOString(),
+};
+
+const TEST_MEMBER_BASE: TeamMember = {
+    userId: 'test-user',
+    teamId: 't1',
+    role: 'STUDENT',
+    status: 'ACTIVE',
+    currentBelt: { color: 'WHITE', degrees: 0, awardedAt: new Date().toISOString(), awardedBy: 'system' },
+    joinedAt: new Date().toISOString()
+};
 
 export default function LoginScreen() {
     const navigation = useNavigation<any>();
@@ -15,6 +33,22 @@ export default function LoginScreen() {
         // Basic validation could go here
         await login(email, password);
         // Navigation is handled by AppNavigator listening to isAuthenticated
+    };
+
+    const handleTestLogin = (role: 'STUDENT' | 'HEAD_COACH') => {
+        const member = { ...TEST_MEMBER_BASE, role };
+
+        if (role === 'HEAD_COACH') {
+            member.currentBelt = { color: 'BLACK', degrees: 2, awardedAt: '2015-01-01T00:00:00Z', awardedBy: 'system' };
+        }
+
+        // Direct state manipulation for testing purposes
+        useAuthStore.setState({
+            user: TEST_USER,
+            teamMember: member,
+            isAuthenticated: true,
+            isLoading: false
+        });
     };
 
     return (
@@ -74,6 +108,22 @@ export default function LoginScreen() {
                         ) : (
                             <Text className="text-black font-bold text-lg">LOG IN</Text>
                         )}
+                    </TouchableOpacity>
+                </View>
+
+                <View className="mt-8 items-center space-y-3">
+                    <Text className="text-gray-500 mb-2">Test Access (Dev Only)</Text>
+                    <TouchableOpacity
+                        className="bg-indigo-600 w-full p-4 rounded-lg items-center"
+                        onPress={() => handleTestLogin('STUDENT')}
+                    >
+                        <Text className="text-white font-bold">Login as Student</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        className="bg-red-600 w-full p-4 rounded-lg items-center"
+                        onPress={() => handleTestLogin('HEAD_COACH')}
+                    >
+                        <Text className="text-white font-bold">Login as Professor</Text>
                     </TouchableOpacity>
                 </View>
 

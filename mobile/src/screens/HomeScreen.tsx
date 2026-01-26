@@ -99,27 +99,7 @@ export default function HomeScreen() {
                     </View>
                 </View>
 
-                {/* Instructor Area - Only visible to Head Coach */}
-                {teamMember?.role === 'HEAD_COACH' && (
-                    <View className="px-6 mt-4">
-                        <Text className="text-white text-lg font-bold mb-3">Área do Instrutor</Text>
-                        <TouchableOpacity
-                            className="bg-indigo-600 rounded-2xl p-5 border border-indigo-500 flex-row items-center justify-between"
-                            onPress={() => navigation.navigate('Attendance')}
-                        >
-                            <View className="flex-row items-center">
-                                <View className="w-10 h-10 bg-indigo-500 rounded-full items-center justify-center mr-4">
-                                    <Ionicons name="list" size={24} color="white" />
-                                </View>
-                                <View>
-                                    <Text className="text-white font-bold text-lg">Chamada de Aula</Text>
-                                    <Text className="text-indigo-200 text-sm">Gerenciar presenças</Text>
-                                </View>
-                            </View>
-                            <Ionicons name="chevron-forward" size={24} color="white" />
-                        </TouchableOpacity>
-                    </View>
-                )}
+
 
             </ScrollView>
         </SafeAreaView>

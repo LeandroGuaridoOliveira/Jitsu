@@ -1,7 +1,7 @@
-import React, { useState, useMemo } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, Switch, Dimensions } from 'react-native';
+import React, { useState, useMemo, useEffect } from 'react';
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, Image, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 // --- Types ---
@@ -12,27 +12,21 @@ interface Student {
     id: string;
     name: string;
     belt: BeltColor;
+    degrees: number;
     totalClasses: number;
-    avatarUrl?: string; // Optional, using placeholders if not present
+    avatarUrl?: string;
+    initialStatus?: AttendanceStatus; // Simulates "checked in" or "absent" via app
 }
 
-interface AttendanceRecord {
-    studentId: string;
-    status: AttendanceStatus;
-}
+// --- Helpers for Sorting ---
+const BELT_RANK_VALUE: Record<BeltColor, number> = {
+    'White': 1,
+    'Blue': 2,
+    'Purple': 3,
+    'Brown': 4,
+    'Black': 5
+};
 
-// --- Mock Data ---
-const MOCK_STUDENTS: Student[] = [
-    { id: '1', name: 'Leandro Oliveira', belt: 'Blue', totalClasses: 42, avatarUrl: 'https://i.pravatar.cc/150?u=1' },
-    { id: '2', name: 'Sarah Connor', belt: 'White', totalClasses: 12, avatarUrl: 'https://i.pravatar.cc/150?u=2' },
-    { id: '3', name: 'Marcus Jones', belt: 'Purple', totalClasses: 156, avatarUrl: 'https://i.pravatar.cc/150?u=3' },
-    { id: '4', name: 'Elena Rodriguez', belt: 'Blue', totalClasses: 89, avatarUrl: 'https://i.pravatar.cc/150?u=4' },
-    { id: '5', name: 'Tyson Lee', belt: 'Brown', totalClasses: 112, avatarUrl: 'https://i.pravatar.cc/150?u=5' },
-    { id: '6', name: 'Jordan Smith', belt: 'White', totalClasses: 5 },
-    { id: '7', name: 'Rickson Gracie', belt: 'Black', totalClasses: 4000 },
-];
-
-// --- Helpers ---
 const getBeltColors = (belt: BeltColor) => {
     switch (belt) {
         case 'White': return 'bg-slate-200 text-slate-900 border-none';
@@ -44,30 +38,77 @@ const getBeltColors = (belt: BeltColor) => {
     }
 };
 
+// --- Mock Data ---
+const MOCK_STUDENTS_RAW: Student[] = [
+    { id: '1', name: 'Leandro Oliveira', belt: 'Blue', degrees: 2, totalClasses: 42, avatarUrl: 'https://i.pravatar.cc/150?u=1', initialStatus: 'PRESENT' },
+    { id: '2', name: 'Sarah Connor', belt: 'White', degrees: 0, totalClasses: 12, avatarUrl: 'https://i.pravatar.cc/150?u=2', initialStatus: 'PENDING' },
+    { id: '3', name: 'Marcus Jones', belt: 'Purple', degrees: 1, totalClasses: 156, avatarUrl: 'https://i.pravatar.cc/150?u=3', initialStatus: 'ABSENT' }, // Marked absent via app
+    { id: '4', name: 'Elena Rodriguez', belt: 'Blue', degrees: 4, totalClasses: 89, avatarUrl: 'https://i.pravatar.cc/150?u=4', initialStatus: 'PRESENT' },
+    { id: '5', name: 'Tyson Lee', belt: 'Brown', degrees: 0, totalClasses: 112, avatarUrl: 'https://i.pravatar.cc/150?u=5', initialStatus: 'PENDING' },
+    { id: '6', name: 'Jordan Smith', belt: 'White', degrees: 3, totalClasses: 5, initialStatus: 'PENDING' },
+    { id: '7', name: 'Rickson Gracie', belt: 'Black', degrees: 9, totalClasses: 4000, initialStatus: 'PRESENT' },
+    { id: '8', name: 'John Wick', belt: 'Black', degrees: 0, totalClasses: 200, initialStatus: 'PENDING' },
+];
+
 export default function AttendanceScreen() {
     const navigation = useNavigation();
-    const route = useRoute();
-    // Assuming route.params could have class details, defaulting for demo
-    // const { classId, className } = route.params as any || {}; 
 
-    // State
+    // 1. Sort Students (Higher Rank First, then Degrees, then Name)
+    const sortedStudents = useMemo(() => {
+        return [...MOCK_STUDENTS_RAW].sort((a, b) => {
+            const rankA = BELT_RANK_VALUE[a.belt];
+            const rankB = BELT_RANK_VALUE[b.belt];
+            if (rankA !== rankB) return rankB - rankA; // Higher belt first
+
+            if (a.degrees !== b.degrees) return b.degrees - a.degrees; // Higher degrees first
+
+            return a.name.localeCompare(b.name); // Alphabetical fallback
+        });
+    }, []);
+
+    // 2. Initialize State with Mocked Initial Status
     const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
+
+    useEffect(() => {
+        const initialMap: Record<string, AttendanceStatus> = {};
+        sortedStudents.forEach(s => {
+            initialMap[s.id] = s.initialStatus || 'PENDING';
+        });
+        setAttendance(initialMap);
+    }, [sortedStudents]);
 
     // Toggle Logic
     const handleAttendance = (studentId: string, status: AttendanceStatus) => {
-        setAttendance(prev => ({
-            ...prev,
-            [studentId]: prev[studentId] === status ? 'PENDING' : status
-        }));
+        setAttendance(prev => {
+            const current = prev[studentId];
+            // If clicking the same status, toggle back to pending? 
+            // User requirement: "professor must allow changing status... from present to absent".
+            // So direct switch. If clicking same, maybe reset to pending (neutral) is okay.
+            const newStatus: AttendanceStatus = current === status ? 'PENDING' : status;
+            return { ...prev, [studentId]: newStatus };
+        });
     };
 
     // Computed Stats
     const stats = useMemo(() => {
-        const total = MOCK_STUDENTS.length;
+        const total = sortedStudents.length;
         const present = Object.values(attendance).filter(s => s === 'PRESENT').length;
         const absent = Object.values(attendance).filter(s => s === 'ABSENT').length;
-        return { total, present, absent };
-    }, [attendance]);
+        const pending = Object.values(attendance).filter(s => s === 'PENDING').length;
+        const allMarked = pending === 0;
+        return { total, present, absent, pending, allMarked };
+    }, [attendance, sortedStudents]);
+
+    const handleFinishClass = () => {
+        Alert.alert(
+            "Finalizar Chamada",
+            `Confirm attendance?\n\nPresent: ${stats.present}\nAbsent: ${stats.absent}`,
+            [
+                { text: "Cancel", style: "cancel" },
+                { text: "Confirm", onPress: () => navigation.goBack() }
+            ]
+        );
+    };
 
     // Render Item
     const renderStudentCard = ({ item }: { item: Student }) => {
@@ -75,13 +116,9 @@ export default function AttendanceScreen() {
         const isPresent = status === 'PRESENT';
         const isAbsent = status === 'ABSENT';
 
-        // Card Styles based on status
-        // Base: bg-zinc-800 border-zinc-700
-        // Present: border-green-500/50
-        // Absent: opacity-60
         let cardStyle = "bg-zinc-800 border border-zinc-700";
         if (isPresent) cardStyle = "bg-zinc-800 border border-green-500/50";
-        if (isAbsent) cardStyle = "bg-zinc-800 border border-red-900/30 opacity-75";
+        if (isAbsent) cardStyle = "bg-zinc-800 border border-red-900/30 opacity-70";
 
         const beltStyle = getBeltColors(item.belt);
 
@@ -96,18 +133,29 @@ export default function AttendanceScreen() {
                         ) : (
                             <Text className="text-white font-bold text-lg">{item.name.charAt(0)}</Text>
                         )}
-                        {/* Status Check on Avatar (optional, like online status) - skipping as not in request requirements explicitly but good for polish */}
+                        {/* Status Check on Avatar */}
+                        {isPresent && (
+                            <View className="absolute bottom-0 right-0 w-4 h-4 bg-green-500 rounded-full border-2 border-zinc-800 z-10" />
+                        )}
                     </View>
 
                     {/* Text Info */}
                     <View>
-                        <Text className="text-white font-bold text-base">{item.name}</Text>
+                        <Text className={`font-bold text-base ${isAbsent ? 'text-slate-500 line-through' : 'text-white'}`}>{item.name}</Text>
                         <View className="flex-row items-center mt-1 space-x-2">
                             {/* Belt Badge */}
-                            <View className={`px-2 py-0.5 rounded-full ${beltStyle}`}>
+                            <View className={`px-2 py-0.5 rounded-full flex-row items-center ${beltStyle}`}>
                                 <Text className={`text-[10px] uppercase font-bold tracking-wider ${beltStyle.includes('text-slate-900') ? 'text-slate-900' : 'text-white'}`}>
-                                    {item.belt} Belt
+                                    {item.belt}
                                 </Text>
+                                {/* Degrees visualisation */}
+                                {item.degrees > 0 && (
+                                    <View className="flex-row ml-1 space-x-0.5">
+                                        {[...Array(item.degrees)].map((_, i) => (
+                                            <View key={i} className={`w-1 h-1 rounded-full ${item.belt === 'White' ? 'bg-slate-800' : 'bg-white'}`} />
+                                        ))}
+                                    </View>
+                                )}
                             </View>
                             <Text className="text-slate-400 text-xs">• {item.totalClasses} Classes</Text>
                         </View>
@@ -119,7 +167,7 @@ export default function AttendanceScreen() {
                     {/* Absent Button */}
                     <TouchableOpacity
                         onPress={() => handleAttendance(item.id, 'ABSENT')}
-                        className={`w-10 h-10 rounded-full items-center justify-center border ${isAbsent ? 'bg-red-600 border-red-500' : 'bg-red-500/20 border-transparent'}`}
+                        className={`w-10 h-10 rounded-full items-center justify-center border ${isAbsent ? 'bg-red-600 border-red-500' : 'bg-red-500/10 border-transparent'}`}
                     >
                         <Ionicons name="close" size={20} color={isAbsent ? "white" : "#ef4444"} />
                     </TouchableOpacity>
@@ -127,7 +175,7 @@ export default function AttendanceScreen() {
                     {/* Present Button */}
                     <TouchableOpacity
                         onPress={() => handleAttendance(item.id, 'PRESENT')}
-                        className={`w-10 h-10 rounded-full items-center justify-center border ${isPresent ? 'bg-green-600 border-green-500' : 'bg-green-500/20 border-transparent'}`}
+                        className={`w-10 h-10 rounded-full items-center justify-center border ${isPresent ? 'bg-green-600 border-green-500' : 'bg-green-500/10 border-transparent'}`}
                     >
                         <Ionicons name="checkmark" size={20} color={isPresent ? "white" : "#22c55e"} />
                     </TouchableOpacity>
@@ -175,49 +223,57 @@ export default function AttendanceScreen() {
                     <Text className="text-slate-400 font-bold tracking-wider text-xs uppercase">
                         Students ({stats.total})
                     </Text>
-                    {stats.absent > 0 && (
-                        <View className="bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
-                            <Text className="text-red-400 text-xs font-bold">{stats.absent} Absent</Text>
+                    <View className="flex-row space-x-2">
+                        {stats.absent > 0 && (
+                            <View className="bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">
+                                <Text className="text-red-400 text-xs font-bold">{stats.absent} Absent</Text>
+                            </View>
+                        )}
+                        <View className="bg-green-500/10 px-3 py-1 rounded-full border border-green-500/20">
+                            <Text className="text-green-400 text-xs font-bold">{stats.present} Present</Text>
                         </View>
-                    )}
+                    </View>
+
                 </View>
             </View>
 
             {/* --- List --- */}
             <FlatList
-                data={MOCK_STUDENTS}
+                data={sortedStudents}
                 keyExtractor={(item) => item.id}
                 renderItem={renderStudentCard}
-                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+                contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
                 showsVerticalScrollIndicator={false}
+                ListFooterComponent={(
+                    <View className="mt-8 mb-4">
+                        <TouchableOpacity
+                            onPress={handleFinishClass}
+                            disabled={!stats.allMarked}
+                            className={`w-full py-4 rounded-xl items-center justify-center flex-row shadow-lg ${stats.allMarked ? 'bg-red-600 active:bg-red-700' : 'bg-slate-800 opacity-50'
+                                }`}
+                        >
+                            {!stats.allMarked && <Ionicons name="lock-closed" size={18} color="#94a3b8" style={{ marginRight: 8 }} />}
+                            <Text className={`font-bold text-lg ${stats.allMarked ? 'text-white' : 'text-slate-500'}`}>
+                                Encerrar Chamada
+                            </Text>
+                        </TouchableOpacity>
+                        {!stats.allMarked && (
+                            <Text className="text-slate-500 text-xs text-center mt-3">
+                                Mark all students to finish class ({stats.pending} remaining)
+                            </Text>
+                        )}
+                    </View>
+                )}
             />
 
-            {/* --- Bottom Floating Panel/FAB --- */}
-            {/* Using a bottom panel style for the summary or just a FAB as requested */}
-            {/* Request: "FAB (Botão Flutuante): bg-red-600... canto inferior direito" */}
-
-            {/* But first, let's add the small summary pill usually seen at bottom left in some designs, 
-                or just stick to the FAB strict requirement. 
-                The image shows a "12/20 Present" pill fixed at bottom left maybe? 
-                The user asked for "FAB ... canto inferior direito". I will add that. 
-                Wait, looking at image description "12/20 Present" is in a bottom bar/pill.
-                I will add both for completeness if it fits "faithful replication", but strictly the user *asked* for FAB.
-                I will add the floating summary pill on the left and FAB on right.
-            */}
-            <View className="absolute bottom-6 left-5 right-5 flex-row justify-between items-center pointer-events-none">
+            {/* --- Summary Pill (Left Side Only) --- */}
+            <View className="absolute bottom-6 left-5 pointer-events-none">
                 <View className="bg-zinc-800/90 px-4 py-3 rounded-full border border-zinc-700 shadow-xl flex-row items-center pointer-events-auto">
-                    <View className="w-2 h-2 rounded-full bg-green-500 mr-2" />
+                    <View className={`w-2 h-2 rounded-full mr-2 ${stats.allMarked ? 'bg-green-500' : 'bg-yellow-500'}`} />
                     <Text className="text-white font-bold text-sm">
-                        {stats.present}/{MOCK_STUDENTS.length} Present
+                        {stats.present}/{sortedStudents.length} Present
                     </Text>
                 </View>
-
-                <TouchableOpacity
-                    className="w-14 h-14 bg-red-600 rounded-full items-center justify-center shadow-lg pointer-events-auto active:bg-red-700"
-                    style={{ shadowColor: '#dc2626', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 }}
-                >
-                    <Ionicons name="add" size={32} color="white" />
-                </TouchableOpacity>
             </View>
 
         </SafeAreaView>

@@ -3,7 +3,8 @@ import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, Image } 
 import { StatusBar } from 'expo-status-bar';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { RootStackParamList } from '../../../../types/navigation';
+import { RootStackParamList } from '../../../types/navigation';
+import { useAuthStore } from '../../../store/authStore';
 
 type ClassDetailScreenRouteProp = RouteProp<RootStackParamList, 'ClassDetails'>;
 
@@ -11,6 +12,8 @@ export default function ClassDetailScreen() {
     const navigation = useNavigation<any>();
     const route = useRoute<ClassDetailScreenRouteProp>();
     const { title, time, instructor, tags = [] } = route.params || {};
+    const { teamMember } = useAuthStore();
+    const isProfessor = teamMember?.role === 'HEAD_COACH';
 
     const [showConfirmation, setShowConfirmation] = useState(false);
     const [isCheckedIn, setIsCheckedIn] = useState(false);
@@ -108,7 +111,20 @@ export default function ClassDetailScreen() {
 
             {/* 5. Action Footer */}
             <View className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-slate-900 via-slate-900 to-transparent pt-10 pb-8 px-6">
-                {!isCheckedIn ? (
+                {isProfessor ? (
+                    <TouchableOpacity
+                        activeOpacity={0.8}
+                        className="bg-indigo-600 w-full py-4 rounded-xl items-center shadow-lg shadow-indigo-900/40 border border-indigo-500"
+                        onPress={() => navigation.navigate('Attendance')}
+                    >
+                        <View className="flex-row items-center">
+                            <Ionicons name="list" size={24} color="white" style={{ marginRight: 8 }} />
+                            <Text className="text-white font-bold text-lg tracking-wide">
+                                REALIZAR CHAMADA
+                            </Text>
+                        </View>
+                    </TouchableOpacity>
+                ) : !isCheckedIn ? (
                     <>
                         <TouchableOpacity
                             activeOpacity={0.8}
