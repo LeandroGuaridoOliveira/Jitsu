@@ -1,10 +1,21 @@
-import React from 'react';
-import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, TextInput, TouchableOpacity, KeyboardAvoidingView, Platform, SafeAreaView, ActivityIndicator } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StatusBar } from 'expo-status-bar';
+import { useAuthStore } from '../../../store/authStore';
 
 export default function LoginScreen() {
     const navigation = useNavigation<any>();
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+
+    const { login, isLoading } = useAuthStore();
+
+    const handleLogin = async () => {
+        // Basic validation could go here
+        await login(email, password);
+        // Navigation is handled by AppNavigator listening to isAuthenticated
+    };
 
     return (
         <SafeAreaView className="flex-1 bg-slate-900">
@@ -29,6 +40,8 @@ export default function LoginScreen() {
                             keyboardType="email-address"
                             autoCapitalize="none"
                             selectionColor="#FFFFFF"
+                            value={email}
+                            onChangeText={setEmail}
                         />
                     </View>
 
@@ -39,6 +52,8 @@ export default function LoginScreen() {
                             className="bg-zinc-800 text-white rounded-lg p-4 mb-4"
                             secureTextEntry
                             selectionColor="#FFFFFF"
+                            value={password}
+                            onChangeText={setPassword}
                         />
                     </View>
 
@@ -46,8 +61,19 @@ export default function LoginScreen() {
                         <Text className="text-gray-400">Forgot password?</Text>
                     </TouchableOpacity>
 
-                    <TouchableOpacity className="bg-white rounded-lg p-4 items-center">
-                        <Text className="text-black font-bold text-lg">LOG IN</Text>
+                    <TouchableOpacity
+                        className={`bg-white rounded-lg p-4 items-center ${isLoading ? 'opacity-70' : ''}`}
+                        onPress={handleLogin}
+                        disabled={isLoading}
+                    >
+                        {isLoading ? (
+                            <View className="flex-row items-center">
+                                <ActivityIndicator color="#000" className="mr-2" />
+                                <Text className="text-black font-bold text-lg">LOGGING IN...</Text>
+                            </View>
+                        ) : (
+                            <Text className="text-black font-bold text-lg">LOG IN</Text>
+                        )}
                     </TouchableOpacity>
                 </View>
 

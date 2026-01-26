@@ -5,22 +5,23 @@ interface AuthState {
     user: User | null;
     teamMember: TeamMember | null;
     isAuthenticated: boolean;
-    login: (user: User, member?: TeamMember) => void;
+    isLoading: boolean;
+    login: (email: string, password: string) => Promise<void>;
     logout: () => void;
 }
 
-// Mock Data
-export const MOCK_USER: User = {
+// Mock Data Generators
+const createMockUser = (email: string): User => ({
     id: 'u1',
-    name: 'Leandro Leg',
-    email: 'leo@jitsu.com',
+    name: 'Leandro',
+    email: email,
     createdAt: new Date().toISOString(),
-};
+});
 
-export const MOCK_MEMBER: TeamMember = {
+const createMockMember = (): TeamMember => ({
     userId: 'u1',
-    teamId: 't1',
-    role: 'STUDENT',
+    teamId: 't1', // Alliance
+    role: 'HEAD_COACH',
     status: 'ACTIVE',
     currentBelt: {
         color: 'BLUE',
@@ -29,12 +30,33 @@ export const MOCK_MEMBER: TeamMember = {
         awardedBy: 'p1'
     },
     joinedAt: new Date().toISOString()
-};
+});
 
 export const useAuthStore = create<AuthState>((set) => ({
-    user: null, // Start null to force login
+    user: null,
     teamMember: null,
     isAuthenticated: false,
-    login: (user, member) => set({ user, teamMember: member, isAuthenticated: true }),
+    isLoading: false,
+
+    login: async (email, password) => {
+        set({ isLoading: true });
+
+        // Simulate network delay
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const user = createMockUser(email || 'demo@jitsu.com');
+                const member = createMockMember();
+
+                set({
+                    user,
+                    teamMember: member,
+                    isAuthenticated: true,
+                    isLoading: false
+                });
+                resolve();
+            }, 1000);
+        });
+    },
+
     logout: () => set({ user: null, teamMember: null, isAuthenticated: false }),
 }));
