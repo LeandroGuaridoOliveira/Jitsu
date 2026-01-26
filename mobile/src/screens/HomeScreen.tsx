@@ -44,7 +44,7 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Hero: Next Session (Moved to Top) */}
+                {/* Hero: Next Session (Primary Focus) */}
                 <View className="flex-row justify-between items-end mb-4">
                     <Text className="text-white text-lg font-bold">Next Session</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('Schedule')}>
@@ -52,8 +52,9 @@ export default function HomeScreen() {
                     </TouchableOpacity>
                 </View>
 
+                {/* Next Session Card - Slightly larger/more padding if needed, but styling was good */}
                 <TouchableOpacity
-                    className="bg-[#2A2323] rounded-2xl p-4 mb-6 flex-row overflow-hidden border border-white/5"
+                    className="bg-[#2A2323] rounded-2xl p-5 mb-8 flex-row overflow-hidden border border-white/5 shadow-lg shadow-black/40"
                     onPress={() => navigation.navigate('ClassDetail')}
                     activeOpacity={0.8}
                 >
@@ -62,14 +63,14 @@ export default function HomeScreen() {
                             <Ionicons name="calendar" size={16} color="#ef4444" />
                             <Text className="text-gray-400 text-xs font-bold ml-2 uppercase">Today</Text>
                         </View>
-                        <Text className="text-white text-xl font-bold mb-1">Fundamentals - Gi</Text>
-                        <Text className="text-gray-400 text-sm mb-4">19:00 - 20:30 • Mat A</Text>
+                        <Text className="text-white text-2xl font-bold mb-1">Fundamentals - Gi</Text>
+                        <Text className="text-gray-400 text-sm mb-5">19:00 - 20:30 • Mat A</Text>
 
                         <View className="flex-row items-center">
-                            <View className="h-6 w-6 bg-gray-600 rounded-full mr-2 overflow-hidden">
+                            <View className="h-7 w-7 bg-gray-600 rounded-full mr-2 overflow-hidden border border-slate-800">
                                 <Image source={{ uri: 'https://i.pravatar.cc/150?u=marcus' }} className="h-full w-full" />
                             </View>
-                            <Text className="text-gray-400 text-sm">Instr. Marcus</Text>
+                            <Text className="text-gray-300 text-sm font-medium">Instr. Marcus</Text>
                         </View>
                     </View>
                     <View className="w-24 bg-zinc-800 rounded-xl overflow-hidden">
@@ -79,33 +80,47 @@ export default function HomeScreen() {
                     </View>
                 </TouchableOpacity>
 
-                {/* Secondary Action: Premium Check-In Button */}
-                <TouchableOpacity
-                    className="bg-white rounded-xl p-5 flex-row items-center justify-between mb-10 shadow-lg shadow-black/20"
-                    onPress={() => navigation.navigate('ClassDetail')}
-                    activeOpacity={0.8}
-                >
-                    <View className="flex-row items-center">
-                        <View className="bg-black/5 p-2 rounded-lg mr-4">
-                            <MaterialCommunityIcons name="qrcode-scan" size={28} color="black" />
+                {/* Quick Actions (Minimalist) */}
+                <View className="flex-row justify-around mb-8 px-2">
+                    <TouchableOpacity
+                        className="items-center"
+                        onPress={() => navigation.navigate('Schedule')}
+                    >
+                        <View className="h-12 w-12 bg-zinc-800 rounded-full items-center justify-center mb-2 border border-zinc-700">
+                            <Ionicons name="calendar-outline" size={24} color="white" />
                         </View>
-                        <View>
-                            <Text className="text-black text-lg font-bold">Check In</Text>
-                            <Text className="text-gray-500 text-xs font-medium">Have a good training</Text>
-                        </View>
-                    </View>
-                    <Ionicons name="chevron-forward" size={24} color="#D1D5DB" />
-                </TouchableOpacity>
+                        <Text className="text-gray-400 text-xs font-medium">Schedule</Text>
+                    </TouchableOpacity>
 
-                {/* Team Feed Preview */}
+                    <TouchableOpacity
+                        className="items-center"
+                        onPress={() => navigation.navigate('TeamFeed')}
+                    >
+                        <View className="h-12 w-12 bg-zinc-800 rounded-full items-center justify-center mb-2 border border-zinc-700">
+                            <Ionicons name="chatbubbles-outline" size={24} color="white" />
+                        </View>
+                        <Text className="text-gray-400 text-xs font-medium">Community</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        className="items-center"
+                        onPress={() => navigation.navigate('Profile')}
+                    >
+                        <View className="h-12 w-12 bg-zinc-800 rounded-full items-center justify-center mb-2 border border-zinc-700">
+                            <Ionicons name="stats-chart-outline" size={24} color="white" />
+                        </View>
+                        <Text className="text-gray-400 text-xs font-medium">Progress</Text>
+                    </TouchableOpacity>
+                </View>
+
+                {/* Team Feed Preview (Optional, user didn't explicitly ask to remove, but said "Mural (Feed): Mantenha simples") */}
                 <View className="flex-row justify-between items-end mb-4">
-                    <Text className="text-white text-lg font-bold">Team Feed</Text>
+                    <Text className="text-white text-lg font-bold">Latest Updates</Text>
                     <TouchableOpacity onPress={() => navigation.navigate('TeamFeed')}>
                         <Ionicons name="chevron-forward" size={24} color="gray" />
                     </TouchableOpacity>
                 </View>
 
-                {/* Simplified Feed Item Preview */}
                 <TouchableOpacity
                     className="bg-zinc-800 rounded-xl p-4 mb-4 border border-zinc-700 flex-row items-start"
                     onPress={() => navigation.navigate('TeamFeed')}
