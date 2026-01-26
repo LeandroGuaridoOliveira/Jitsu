@@ -6,6 +6,7 @@ import LoginScreen from '../features/auth/screens/LoginScreen';
 import RegisterScreen from '../features/auth/screens/RegisterScreen';
 import MainTabNavigator from './MainTabNavigator';
 import TeamFeedScreen from '../features/community/screens/TeamFeedScreen';
+import TeamInfoScreen from '../features/community/screens/TeamInfoScreen';
 import CheckInSuccessScreen from '../features/checkin/screens/CheckInSuccessScreen';
 import ClassDetailScreen from '../features/schedule/screens/ClassDetailScreen';
 import { useAuthStore } from '../store/authStore';
@@ -23,6 +24,7 @@ export default function AppNavigator() {
                     <Stack.Group>
                         <Stack.Screen name="MainTabs" component={MainTabNavigator} />
                         <Stack.Screen name="TeamFeed" component={TeamFeedScreen} />
+                        <Stack.Screen name="TeamInfo" component={TeamInfoScreen} />
                         <Stack.Screen name="ClassDetails" component={ClassDetailScreen} />
                         <Stack.Screen name="CheckInSuccess" component={CheckInSuccessScreen} options={{ presentation: 'modal' }} />
                     </Stack.Group>

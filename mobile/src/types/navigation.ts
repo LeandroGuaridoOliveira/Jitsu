@@ -2,7 +2,8 @@ export type RootStackParamList = {
     Login: undefined;
     Register: undefined;
     MainTabs: undefined;
-    TeamFeed: undefined;
+    TeamFeed: { teamId: string };
+    TeamInfo: { teamId: string };
     ClassDetails: {
         classId: string;
         title: string;
