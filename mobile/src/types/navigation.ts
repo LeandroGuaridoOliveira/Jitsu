@@ -6,11 +6,12 @@ export type RootStackParamList = {
     TeamInfo: { teamId: string };
     ClassDetails: {
         classId: string;
-        title: string;
-        instructor: string;
-        time: string;
-        description?: string;
-        tags: string[];
+        // Optional preview data to show while loading
+        preview?: {
+            title: string;
+            time: string;
+            instructor?: string;
+        }
     };
     CheckInSuccess: undefined;
     CreateTeam: undefined;
@@ -18,5 +19,7 @@ export type RootStackParamList = {
     TeamContext: { teamId: string };
     TeamSettings: { teamId: string };
     TeamInvite: { teamId: string };
+    AddRecurringClass: { teamId: string };
+    MonthlyHistory: undefined;
     Attendance: undefined;
 };

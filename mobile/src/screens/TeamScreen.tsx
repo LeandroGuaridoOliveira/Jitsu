@@ -123,7 +123,6 @@ export default function TeamScreen() {
         <SafeAreaView className="flex-1 bg-slate-900">
             <StatusBar style="light" />
 
-            {/* Header */}
             <View className="flex-row items-center justify-between px-4 pt-2 pb-4">
                 <Text className="text-white text-2xl font-bold">Meus Times</Text>
                 <TouchableOpacity

@@ -1,110 +1,194 @@
-import React from 'react';
-import { View, Text, SectionList, TouchableOpacity, SafeAreaView } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, Text, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RootStackParamList } from '../../../types/navigation';
+import { useAuthStore } from '../../../store/authStore';
+import { MockService } from '../../../services/mockService';
+import { WeeklyScheduleItem, DayOfWeek } from '../../../types/domain';
+import { format, addDays, startOfWeek, isSameDay } from 'date-fns';
+import { ptBR } from 'date-fns/locale';
+import { ClassCard } from '../components/ClassCard';
 
-type ClassItem = {
-    id: string;
-    time: string;
-    title: string;
-    instructor: string;
-    type: 'Gi' | 'No-Gi' | 'Kids' | 'Competition';
-    duration: string;
+type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
+
+// Helper to map English DayOfWeek to date-fns or Portuguese display
+const DAY_MAP: Record<string, DayOfWeek> = {
+    'seg': 'MONDAY',
+    'ter': 'TUESDAY',
+    'qua': 'WEDNESDAY',
+    'qui': 'THURSDAY',
+    'sex': 'FRIDAY',
+    'sáb': 'SATURDAY',
+    'dom': 'SUNDAY'
 };
 
-type ScheduleSection = {
-    title: string;
-    data: ClassItem[];
-};
-
-const SCHEDULE_DATA: ScheduleSection[] = [
-    {
-        title: "Segunda-feira",
-        data: [
-            { id: '1', time: '06:00', title: 'Jiu-Jitsu Fundamentals', instructor: 'Prof. Bruno', type: 'Gi', duration: '1h' },
-            { id: '2', time: '12:00', title: 'All Levels', instructor: 'Inst. Sarah', type: 'No-Gi', duration: '1h' },
-            { id: '3', time: '18:00', title: 'Kids Class', instructor: 'Prof. Bruno', type: 'Kids', duration: '45m' },
-            { id: '4', time: '19:00', title: 'Competition Training', instructor: 'Mestre Renato', type: 'Competition', duration: '1.5h' },
-        ]
-    },
-    {
-        title: "Terça-feira",
-        data: [
-            { id: '5', time: '07:00', title: 'Drills & Techniques', instructor: 'Inst. Sarah', type: 'Gi', duration: '1h' },
-            { id: '6', time: '12:00', title: 'Advanced Concepts', instructor: 'Mestre Renato', type: 'Gi', duration: '1h' },
-            { id: '7', time: '19:00', title: 'No-Gi Fundamentals', instructor: 'Prof. Bruno', type: 'No-Gi', duration: '1h' },
-            { id: '8', time: '20:00', title: 'Open Mat', instructor: 'All', type: 'Gi', duration: '1h' },
-        ]
-    },
-    {
-        title: "Quarta-feira",
-        data: [
-            { id: '9', time: '06:00', title: 'Jiu-Jitsu Fundamentals', instructor: 'Prof. Bruno', type: 'Gi', duration: '1h' },
-            { id: '10', time: '12:00', title: 'All Levels', instructor: 'Inst. Sarah', type: 'No-Gi', duration: '1h' },
-            { id: '11', time: '18:00', title: 'Kids Class', instructor: 'Prof. Bruno', type: 'Kids', duration: '45m' },
-            { id: '12', time: '19:00', title: 'Advanced Class', instructor: 'Mestre Renato', type: 'Gi', duration: '1.5h' },
-        ]
-    },
-];
+const DAY_ORDER: DayOfWeek[] = ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY', 'SATURDAY', 'SUNDAY'];
 
 export default function ScheduleScreen() {
-    const renderItem = ({ item }: { item: ClassItem }) => (
-        <View className="bg-zinc-800 mx-4 mb-3 rounded-2xl p-4 flex-row items-center border border-zinc-700">
-            {/* Time Column */}
-            <View className="pr-4 border-r border-zinc-700 items-center justify-center w-20">
-                <Text className="text-white text-lg font-bold">{item.time}</Text>
-                <Text className="text-gray-500 text-xs font-bold">{item.duration}</Text>
-            </View>
+    const navigation = useNavigation<NavigationProp>();
+    const { teamMember } = useAuthStore();
+    const [schedule, setSchedule] = useState<WeeklyScheduleItem[]>([]);
+    const [loading, setLoading] = useState(true);
 
-            {/* Info Column */}
-            <View className="flex-1 px-4">
-                <Text className="text-white text-base font-bold mb-1">{item.title}</Text>
-                <View className="flex-row items-center">
-                    <Ionicons name="person" size={12} color="#9ca3af" className="mr-1" />
-                    <Text className="text-gray-400 text-sm">{item.instructor}</Text>
-                </View>
-                <View className="flex-row items-center mt-1">
-                    <View className={`px-2 py-0.5 rounded mr-2 ${item.type === 'Gi' ? 'bg-blue-900/50' :
-                            item.type === 'No-Gi' ? 'bg-orange-900/50' :
-                                item.type === 'Competition' ? 'bg-red-900/50' : 'bg-green-900/50'
-                        }`}>
-                        <Text className={`text-[10px] font-bold uppercase ${item.type === 'Gi' ? 'text-blue-200' :
-                                item.type === 'No-Gi' ? 'text-orange-200' :
-                                    item.type === 'Competition' ? 'text-red-200' : 'text-green-200'
-                            }`}>{item.type}</Text>
-                    </View>
-                </View>
-            </View>
+    // Day Selection State
+    const [selectedDay, setSelectedDay] = useState<DayOfWeek>('MONDAY');
+    const [weekDates, setWeekDates] = useState<{ day: string, date: string, fullDate: Date, key: DayOfWeek }[]>([]);
 
-            {/* Action Button */}
-            <TouchableOpacity className="bg-red-600 px-4 py-2 rounded-xl">
-                <Text className="text-white text-xs font-bold">Join</Text>
-            </TouchableOpacity>
+    useEffect(() => {
+        loadSchedule();
+        generateWeekDays();
+    }, []);
+
+    const loadSchedule = async () => {
+        try {
+            // Assuming 't1' for now, replace with actual teamId from store/param
+            const data = await MockService.getWeeklySchedule('t1');
+            setSchedule(data);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const generateWeekDays = () => {
+        const today = new Date();
+        const start = startOfWeek(today, { weekStartsOn: 1 }); // Monday start
+        const days = [];
+
+        for (let i = 0; i < 7; i++) {
+            const d = addDays(start, i);
+            const dayName = format(d, 'EEE', { locale: ptBR }).replace('.', '').toLowerCase();
+            // Map pt-BR short day to our DayOfWeek key
+            let key: DayOfWeek = 'MONDAY'; // fallback
+            if (dayName.includes('seg')) key = 'MONDAY';
+            else if (dayName.includes('ter')) key = 'TUESDAY';
+            else if (dayName.includes('qua')) key = 'WEDNESDAY';
+            else if (dayName.includes('qui')) key = 'THURSDAY';
+            else if (dayName.includes('sex')) key = 'FRIDAY';
+            else if (dayName.includes('sáb')) key = 'SATURDAY';
+            else if (dayName.includes('dom')) key = 'SUNDAY';
+
+            days.push({
+                day: format(d, 'EEE', { locale: ptBR }).toUpperCase().substring(0, 3),
+                date: format(d, 'd'),
+                fullDate: d,
+                key: key
+            });
+        }
+        setWeekDates(days);
+
+        // Auto-select current day
+        const currentDayKey = days.find(d => isSameDay(d.fullDate, today))?.key || 'MONDAY';
+        setSelectedDay(currentDayKey);
+    };
+
+    const filteredSchedule = useMemo(() => {
+        return schedule
+            .filter(item => item.dayOfWeek === selectedDay)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+    }, [schedule, selectedDay]);
+
+    const canAddClass = teamMember?.role === 'INSTRUCTOR' || teamMember?.role === 'HEAD_COACH';
+
+    const renderHeader = () => (
+        <View className="px-4 py-4 border-b border-white/5 flex-row justify-between items-center bg-slate-900">
+            <View>
+                <Text className="text-white text-2xl font-bold">Agenda</Text>
+                <Text className="text-slate-400 text-xs font-medium">TREINOS DA SEMANA</Text>
+            </View>
+            <View className="flex-row gap-3">
+                {canAddClass && (
+                    <TouchableOpacity
+                        onPress={() => navigation.navigate('AddRecurringClass', { teamId: 't1' })}
+                        className="w-10 h-10 bg-zinc-800 items-center justify-center rounded-full active:bg-zinc-700"
+                    >
+                        <Ionicons name="add" size={22} color="white" />
+                    </TouchableOpacity>
+                )}
+                <TouchableOpacity
+                    onPress={() => navigation.navigate('MonthlyHistory')}
+                    className="w-10 h-10 bg-zinc-800 items-center justify-center rounded-full active:bg-zinc-700"
+                >
+                    <Ionicons name="calendar-outline" size={20} color="white" />
+                </TouchableOpacity>
+            </View>
         </View>
     );
 
-    const renderHeader = ({ section: { title } }: { section: ScheduleSection }) => (
-        <View className="px-4 py-3 bg-slate-900">
-            <Text className="text-gray-400 text-sm font-bold uppercase tracking-wider">{title}</Text>
+    const renderDayStrip = () => (
+        <View className="py-4 bg-slate-900 border-b border-white/5">
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
+                {weekDates.map((item) => {
+                    const isSelected = selectedDay === item.key;
+                    return (
+                        <TouchableOpacity
+                            key={item.key}
+                            onPress={() => setSelectedDay(item.key)}
+                            className={`mr-3 py-2 px-3 items-center rounded-xl min-w-[56px] ${isSelected ? 'bg-blue-600' : 'bg-transparent'}`}
+                        >
+                            <Text className={`text-xs font-bold mb-1 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                                {item.day}
+                            </Text>
+                            <Text className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                                {item.date}
+                            </Text>
+                            {isSelected && <View className="w-1 h-1 rounded-full bg-white mt-1" />}
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
         </View>
     );
+
+
 
     return (
-        <SafeAreaView className="flex-1 bg-slate-900">
+        <View className="flex-1 bg-slate-900">
             <StatusBar style="light" />
-            <View className="px-4 py-4 border-b border-zinc-800 flex-row justify-between items-center mb-2">
-                <Text className="text-white text-2xl font-bold">Weekly Schedule</Text>
-                <Ionicons name="calendar" size={24} color="white" />
-            </View>
-            <SectionList
-                sections={SCHEDULE_DATA}
-                keyExtractor={(item) => item.id}
-                renderItem={renderItem}
-                renderSectionHeader={renderHeader}
-                stickySectionHeadersEnabled={false}
-                contentContainerStyle={{ paddingBottom: 20 }}
-                showsVerticalScrollIndicator={false}
-            />
-        </SafeAreaView>
+            <View className="safe-area-top bg-slate-900" style={{ height: 40 }} />
+            {/* Adjust safe area spacer if not using SafeAreaView directly or if header needs it. 
+                Using View flex-1 + padding top is safer with custom headers usually, 
+                but let's stick to simple Structure. 
+            */}
+
+            {renderHeader()}
+            {renderDayStrip()}
+
+            {loading ? (
+                <View className="flex-1 items-center justify-center">
+                    <ActivityIndicator size="large" color="#2563eb" />
+                </View>
+            ) : (
+                <FlatList
+                    data={filteredSchedule}
+                    keyExtractor={(item) => item.id}
+                    renderItem={({ item }) => (
+                        <ClassCard
+                            item={item}
+                            onPress={() => navigation.navigate('ClassDetails', {
+                                classId: item.id,
+                                preview: {
+                                    title: item.title,
+                                    time: `${item.startTime} - ${item.endTime}`,
+                                    instructor: item.instructorIds[0]
+                                }
+                            })}
+                        />
+                    )}
+                    contentContainerStyle={{ paddingBottom: 24, paddingTop: 16 }}
+                    ListEmptyComponent={
+                        <View className="items-center justify-center py-20 px-10">
+                            <Ionicons name="calendar-clear-outline" size={48} color="#3f3f46" />
+                            <Text className="text-zinc-500 text-center mt-4">Nenhuma aula agendada para este dia.</Text>
+                        </View>
+                    }
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
+        </View>
     );
 }

@@ -1,4 +1,4 @@
-export type UserRole = 'STUDENT' | 'ASSISTANT' | 'HEAD_COACH';
+export type UserRole = 'STUDENT' | 'ASSISTANT' | 'HEAD_COACH' | 'INSTRUCTOR';
 
 export interface User {
     id: string;
@@ -60,7 +60,11 @@ export interface WeeklyScheduleItem {
     startTime: string; // HH:mm
     endTime: string; // HH:mm
     title: string; // e.g. "Fundamentals", "Advanced"
-    instructorId?: string;
+    subtitle?: string;
+    instructorIds: string[]; // List of instructor IDs
+    type: 'Gi' | 'No-Gi' | 'Kids' | 'Competition'; // Renaming 'categories' to 'type' for consistency with UI reqs or keeping categories if generic
+    tags: string[]; // e.g., ["GI", "ADULTS", "BEGINNERS"]
+    isRecurring?: boolean;
 }
 
 export interface TrainingSession {
