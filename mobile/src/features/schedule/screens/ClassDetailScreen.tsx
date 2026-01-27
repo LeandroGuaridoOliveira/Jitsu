@@ -1,13 +1,13 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, Image, ActivityIndicator, TextInput } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, SafeAreaView, Modal, Image, ActivityIndicator, TextInput, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { RouteProp, useNavigation, useRoute } from '@react-navigation/native';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../../../types/navigation';
 import { useAuthStore } from '../../../store/authStore';
 import { MockService } from '../../../services/mockService';
 import { getBeltRank, formatBeltName } from '../../../utils/beltSystem';
-import { User } from '../../../types/domain';
 
 type ClassDetailScreenRouteProp = RouteProp<RootStackParamList, 'ClassDetails'>;
 
@@ -16,22 +16,35 @@ export default function ClassDetailScreen() {
     const route = useRoute<ClassDetailScreenRouteProp>();
     const { classId, preview } = route.params;
 
+    const { user, teamMember } = useAuthStore();
+    // Assuming this screen is accessed by Admin/Instructor as per context
+    const isInstructor = true; // Forcing true for this task context as requested "Admin/Gestão"
+
     const [loading, setLoading] = useState(true);
     const [details, setDetails] = useState<any>(null);
-    const [showConfirmation, setShowConfirmation] = useState(false);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-    // UI State
+    const isCancelled = details?.status === 'CANCELLED';
+
+    // UI state
     const [selectedTab, setSelectedTab] = useState<'CONFIRMED' | 'PENDING' | 'ABSENT'>('CONFIRMED');
-    const [showAddUserModal, setShowAddUserModal] = useState(false);
+    const [showAddModal, setShowAddModal] = useState(false);
 
-    // Add User Logic
+    // Add Modal State
+    const [addMode, setAddMode] = useState<'STUDENT' | 'GUEST'>('STUDENT');
+
+    // Student Search State
     const [userIdInput, setUserIdInput] = useState('');
     const [foundUser, setFoundUser] = useState<any>(null);
     const [isSearchingUser, setIsSearchingUser] = useState(false);
 
+    // Guest State
+    const [guestName, setGuestName] = useState('');
+    const [guestBelt, setGuestBelt] = useState<string>('WHITE');
+
     useEffect(() => {
         loadDetails();
-    }, [classId]);
+    }, [classId, refreshTrigger]);
 
     const loadDetails = async () => {
         setLoading(true);
@@ -45,13 +58,57 @@ export default function ClassDetailScreen() {
         }
     };
 
-    // Fallback to preview data if loading
-    const displayTitle = details?.title || preview?.title || "Carregando...";
-    const displayTime = details?.time || preview?.time || "--:--";
-    const displayInstructor = details?.instructor?.name || preview?.instructor || "Instrutor";
-    const displayDate = details?.date ? new Date(details.date).toLocaleDateString() : '';
+    const handleEditClass = () => {
+        Alert.alert(
+            "Opções da Aula",
+            "Selecione uma ação",
+            [
+                {
+                    text: "Alterar Instrutor/Detalhes",
+                    onPress: () => console.log("Edit Details Pressed"),
+                },
+                {
+                    text: "Cancelar Aula",
+                    style: "destructive",
+                    onPress: confirmCancelClass
+                },
+                {
+                    text: "Voltar",
+                    style: "cancel"
+                }
+            ]
+        );
+    };
 
-    const isHistory = details?.status === 'COMPLETED';
+    const confirmCancelClass = () => {
+        Alert.alert(
+            "Confirmar Cancelamento",
+            "Tem certeza que deseja cancelar esta aula? Esta ação não pode ser desfeita.",
+            [
+                { text: "Não", style: "cancel" },
+                {
+                    text: "Sim, Cancelar",
+                    style: "destructive",
+                    onPress: async () => {
+                        setLoading(true);
+                        try {
+                            await MockService.cancelSession(classId);
+                            loadDetails(); // Refresh to get CANCELLED status
+                        } catch (e) {
+                            console.error(e);
+                        }
+                    }
+                }
+            ]
+        );
+    };
+
+    // Calculate Capacity
+    const capacityTotal = 30; // Mock fixed capacity
+    const currentCount = useMemo(() => {
+        if (!details?.attendanceList) return 0;
+        return details.attendanceList.filter((s: any) => s.status === 'PRESENT').length;
+    }, [details]);
 
     const sortedStudents = useMemo(() => {
         if (!details?.attendanceList) return [];
@@ -65,193 +122,33 @@ export default function ClassDetailScreen() {
 
         return filtered.sort((a: any, b: any) => {
             // Higher belt rank first (Descending)
+            // Black (Rank 4) -> White (Rank 0)
             const rankA = getBeltRank(a.beltColor || 'WHITE');
             const rankB = getBeltRank(b.beltColor || 'WHITE');
             return rankB - rankA;
         });
     }, [details, selectedTab]);
 
-    // --- RENDERERS ---
-
-    const renderHeader = () => (
-        <View className="flex-row items-center justify-between px-6 py-4">
-            <TouchableOpacity onPress={() => navigation.goBack()} className="p-2 -ml-2">
-                <Ionicons name="chevron-back" size={28} color="white" />
-            </TouchableOpacity>
-            <Text className="text-white text-lg font-semibold">{isHistory ? 'Histórico' : 'Detalhes da Aula'}</Text>
-            <View className="w-10" />
-        </View>
-    );
-
-    const renderHero = () => {
-        return (
-            <View className="mx-6 mt-2 mb-6">
-                {/* Main Card */}
-                <View className="bg-zinc-900 rounded-2xl border border-zinc-800 p-5 shadow-sm relative overflow-hidden">
-                    {/* Decorative Blue Accents */}
-                    <View className="absolute top-0 right-0 w-32 h-32 bg-blue-600/5 rounded-full -mr-10 -mt-10" />
-
-                    {/* Status Badge (History) */}
-                    {isHistory && (
-                        <View className={`self-start px-3 py-1 rounded-full mb-4 ${details?.userStatus === 'PRESENT' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                            <Text className={`text-xs font-bold ${details?.userStatus === 'PRESENT' ? 'text-green-400' : 'text-red-400'}`}>
-                                {details?.userStatus === 'PRESENT' ? 'PRESENÇA CONFIRMADA' : 'FALTOU'}
-                            </Text>
-                        </View>
-                    )}
-
-                    {/* Top Row: Date & Time */}
-                    <View className="flex-row items-baseline mb-1">
-                        <Text className="text-blue-500 font-bold text-lg mr-2">
-                            {displayTime}
-                        </Text>
-                        <Text className="text-gray-400 text-sm font-medium uppercase tracking-wide">
-                            {displayDate}
-                        </Text>
-                    </View>
-
-                    {/* Title */}
-                    <Text className="text-white text-2xl font-bold mb-4 leading-tight">
-                        {displayTitle}
-                    </Text>
-
-                    {/* Info Row: Location & Type */}
-                    <View className="flex-row items-center mb-6 flex-wrap gap-2">
-                        <View className="flex-row items-center bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
-                            <Ionicons name="location-sharp" size={14} color="#3b82f6" />
-                            <Text className="text-gray-300 text-xs font-medium ml-1.5">{details?.location || "Dojo Principal"}</Text>
-                        </View>
-                        <View className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700">
-                            <Text className="text-blue-400 text-xs font-bold uppercase">No Gi</Text>
-                        </View>
-                    </View>
-
-                    {/* Instructor Info (Moved inside Hero as requested) */}
-                    <View className="flex-row items-center pt-5 border-t border-white/5">
-                        <View className="h-10 w-10 rounded-full bg-zinc-700 items-center justify-center border border-zinc-600 overflow-hidden">
-                            {details?.instructor?.avatarUrl ? (
-                                <Image source={{ uri: details.instructor.avatarUrl }} className="w-full h-full" />
-                            ) : (
-                                <Ionicons name="person" size={18} color="#e4e4e7" />
-                            )}
-                        </View>
-                        <View className="ml-3 flex-1">
-                            <Text className="text-gray-400 text-[10px] uppercase font-bold tracking-wider mb-0.5">
-                                Instrutor
-                            </Text>
-                            <Text className="text-white text-sm font-semibold">
-                                {displayInstructor}
-                            </Text>
-                        </View>
-                        {/* Chat button removed per request */}
-                    </View>
-                </View>
-            </View>
-        )
-    };
-
-    const renderSummary = () => {
-        if (!details?.summary) return null;
-        return (
-            <View className="mx-6 mb-8">
-                <Text className="text-white text-lg font-bold mb-3">Resumo do Treino</Text>
-                <View className="bg-zinc-900 p-4 rounded-xl border border-white/5">
-                    <Text className="text-slate-300 leading-relaxed">
-                        {details.summary}
-                    </Text>
-                </View>
-            </View>
-        );
-    };
-
-    const renderTabs = () => (
-        <View className="flex-row mx-6 mb-4 bg-zinc-900 rounded-xl p-1 border border-zinc-800">
-            <TouchableOpacity
-                onPress={() => setSelectedTab('CONFIRMED')}
-                className={`flex-1 py-2 items-center rounded-lg ${selectedTab === 'CONFIRMED' ? 'bg-blue-600' : 'bg-transparent'}`}
-            >
-                <Text className={`font-bold text-xs ${selectedTab === 'CONFIRMED' ? 'text-white' : 'text-gray-400'}`}>Confirmed ({details?.attendanceList?.filter((s: any) => s.status === 'PRESENT').length || 0})</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={() => setSelectedTab('PENDING')}
-                className={`flex-1 py-2 items-center rounded-lg ${selectedTab === 'PENDING' ? 'bg-zinc-700' : 'bg-transparent'}`}
-            >
-                <Text className={`font-bold text-xs ${selectedTab === 'PENDING' ? 'text-white' : 'text-gray-400'}`}>Pending ({details?.attendanceList?.filter((s: any) => s.status === 'PENDING').length || 0})</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-                onPress={() => setSelectedTab('ABSENT')}
-                className={`flex-1 py-2 items-center rounded-lg ${selectedTab === 'ABSENT' ? 'bg-zinc-700' : 'bg-transparent'}`}
-            >
-                <Text className={`font-bold text-xs ${selectedTab === 'ABSENT' ? 'text-white' : 'text-gray-400'}`}>Absent ({details?.attendanceList?.filter((s: any) => s.status === 'ABSENT').length || 0})</Text>
-            </TouchableOpacity>
-        </View>
-    );
-
-    const renderAttendanceList = () => {
-        if (!details?.attendanceList) return null;
-
-        return (
-            <View className="mx-6 mb-32">
-                {renderTabs()}
-
-                {sortedStudents.map((student: any, index: number) => {
-                    const beltColorText = {
-                        'WHITE': 'text-white',
-                        'BLUE': 'text-blue-400',
-                        'PURPLE': 'text-purple-400',
-                        'BROWN': 'text-amber-700',
-                        'BLACK': 'text-red-500',
-                    }[student.beltColor as string] || 'text-gray-400';
-
-                    return (
-                        <View key={index} className="flex-row items-center mb-3 bg-zinc-900 p-3 rounded-xl border border-zinc-800">
-                            <View className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden border border-white/10 mr-4">
-                                <Image source={{ uri: student.avatarUrl }} className="w-full h-full" />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="text-white font-bold text-base">{student.name}</Text>
-                                <View className="flex-row items-center mt-0.5">
-                                    <View className={`w-2 h-2 rounded-full mr-2 ${student.beltColor === 'WHITE' ? 'bg-white' : ''} ${student.beltColor === 'BLUE' ? 'bg-blue-500' : ''} ${student.beltColor === 'PURPLE' ? 'bg-purple-500' : ''} ${student.beltColor === 'BROWN' ? 'bg-amber-800' : ''} ${student.beltColor === 'BLACK' ? 'bg-black border border-white' : ''}`} />
-                                    <Text className={`${beltColorText} text-xs font-medium`}>{formatBeltName(student.beltColor)} Belt</Text>
-                                    {student.isVisitor && (
-                                        <View className="ml-2 bg-blue-900/40 px-2 py-0.5 rounded border border-blue-500/30">
-                                            <Text className="text-blue-300 text-[10px] font-bold">VISITANTE</Text>
-                                        </View>
-                                    )}
-                                </View>
-                            </View>
-
-                            {student.status === 'PRESENT' && (
-                                <View className="w-8 h-8 rounded-full bg-green-500/10 items-center justify-center">
-                                    <Ionicons name="checkmark" size={18} color="#4ade80" />
-                                </View>
-                            )}
-                            {student.status === 'PENDING' && (
-                                <View className="w-8 h-8 rounded-full bg-zinc-800 items-center justify-center border border-zinc-700">
-                                    <View className="w-2 h-2 rounded-full bg-zinc-500" />
-                                </View>
-                            )}
-                            {student.status === 'ABSENT' && (
-                                <View className="w-8 h-8 rounded-full bg-red-500/10 items-center justify-center">
-                                    <Ionicons name="close" size={18} color="#ef4444" />
-                                </View>
-                            )}
-                        </View>
-                    )
-                })}
-            </View>
-        );
-    };
+    // --- ACTIONS ---
 
     const handleSearchUser = async (text: string) => {
-        setUserIdInput(text);
-        if (text.length === 9) {
+        // Apply Mask XXXX-XXXX
+        // Simple formatter: Insert dash after 4 chars
+        let formatted = text.toUpperCase().replace(/[^A-Z0-9]/g, '');
+        if (formatted.length > 4) {
+            formatted = formatted.slice(0, 4) + '-' + formatted.slice(4, 8);
+        }
+
+        setUserIdInput(formatted);
+
+        if (formatted.length === 9) { // XXXX-XXXX is 9 chars
             setIsSearchingUser(true);
             try {
-                const user = await MockService.findUserByCode(text);
+                const user = await MockService.findUserByCode(formatted);
                 setFoundUser(user);
             } catch (err) {
                 console.error(err);
+                setFoundUser(null);
             } finally {
                 setIsSearchingUser(false);
             }
@@ -260,90 +157,318 @@ export default function ClassDetailScreen() {
         }
     };
 
-    const handleConfirmAddUser = async () => {
+    const handleAddStudent = async () => {
         if (!foundUser) return;
         try {
-            await MockService.addStudentToClass(details.id, foundUser.id);
-            setShowAddUserModal(false);
-            setUserIdInput('');
-            setFoundUser(null);
-            loadDetails();
-        } catch (e) {
-            console.error(e);
+            await MockService.addStudentToClass(classId, foundUser.id);
+            closeModal();
+            setRefreshTrigger(prev => prev + 1);
+        } catch (error) {
+            console.error(error);
         }
     };
 
-    const renderFAB = () => (
-        <TouchableOpacity
-            className="absolute bottom-6 right-6 w-14 h-14 bg-blue-600 rounded-full items-center justify-center shadow-lg shadow-blue-900/50 z-50 transition-transform active:scale-95"
-            onPress={() => setShowAddUserModal(true)}
-        >
-            <Ionicons name="add" size={32} color="white" />
-        </TouchableOpacity>
+    const handleAddGuest = async () => {
+        if (!guestName.trim()) return;
+        try {
+            await MockService.addStudentToClass(classId, {
+                guestName,
+                guestBelt
+            });
+            closeModal();
+            setRefreshTrigger(prev => prev + 1);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const closeModal = () => {
+        setShowAddModal(false);
+        setUserIdInput('');
+        setFoundUser(null);
+        setGuestName('');
+        setGuestBelt('WHITE');
+        setAddMode('STUDENT');
+    };
+
+    // --- RENDERERS ---
+
+    const renderHeader = () => (
+        <View className="flex-row items-center justify-between px-4 py-3 bg-slate-900 border-b border-white/5">
+            {/* Top Left: Plus Button (Disabled if Cancelled) */}
+            <TouchableOpacity
+                onPress={() => setShowAddModal(true)}
+                disabled={isCancelled}
+                className={`w-11 h-11 items-center justify-center -ml-2 rounded-full ${isCancelled ? 'opacity-30' : 'active:bg-white/10'}`}
+            >
+                <Ionicons name="add" size={32} color="white" />
+            </TouchableOpacity>
+
+            <Text className="text-white text-lg font-bold">Detalhes da Aula</Text>
+
+            {/* Top Right: Edit Button */}
+            <TouchableOpacity
+                onPress={handleEditClass}
+                className="px-2 py-1"
+            >
+                <Text className="text-red-500 font-bold text-base">Editar</Text>
+            </TouchableOpacity>
+        </View>
     );
 
-    const renderAddUserModal = () => (
-        <Modal
-            animationType="slide"
-            transparent={true}
-            visible={showAddUserModal}
-            onRequestClose={() => setShowAddUserModal(false)}
-        >
-            <View className="flex-1 bg-black/80 justify-start pt-20 px-6">
-                {/* Fixed keyboard overlap by moving to top (justify-start + pt-20) */}
-                <View className="bg-zinc-900 w-full rounded-2xl p-6 border border-zinc-800 shadow-2xl">
-                    <View className="flex-row justify-between items-center mb-6">
-                        <Text className="text-white text-xl font-bold">Adicionar Aluno</Text>
-                        <TouchableOpacity onPress={() => setShowAddUserModal(false)}>
-                            <Ionicons name="close" size={24} color="#6b7280" />
-                        </TouchableOpacity>
-                    </View>
+    const renderHero = () => {
+        const displayTitle = details?.title || preview?.title || "Carregando...";
+        const displayTime = details?.time || preview?.time || "--:--";
+        const instructorName = details?.instructor?.name || "Instrutores";
 
-                    <Text className="text-gray-400 text-sm mb-2">ID do Usuário</Text>
-                    <TextInput
-                        className="bg-zinc-800 text-white p-4 rounded-xl text-lg font-mono border border-zinc-700 mb-6"
-                        placeholder="Ex: A1B2-8899"
-                        placeholderTextColor="#52525b"
-                        value={userIdInput}
-                        onChangeText={handleSearchUser}
-                        autoCapitalize="characters"
-                        maxLength={9}
-                        autoFocus
-                    />
+        return (
+            <View className="mx-4 mt-4 mb-6">
+                <View className="bg-zinc-900 rounded-2xl p-5 border border-zinc-800 shadow-sm relative overflow-hidden">
+                    {/* Decorative Accent */}
+                    <View className={`absolute top-0 right-0 w-24 h-24 rounded-full -mr-8 -mt-8 ${isCancelled ? 'bg-red-600/10' : 'bg-blue-600/10'}`} />
 
-                    {isSearchingUser && <ActivityIndicator color="#2563eb" className="mb-4" />}
-
-                    {foundUser && (
-                        <View className="bg-zinc-800 p-4 rounded-xl border border-blue-500/30 mb-6 flex-row items-center">
-                            <View className="w-12 h-12 rounded-full bg-zinc-700 overflow-hidden mr-3">
-                                <Image source={{ uri: foundUser.avatarUrl }} className="w-full h-full" />
-                            </View>
-                            <View className="flex-1">
-                                <Text className="text-white font-bold text-lg">{foundUser.name}</Text>
-                                <Text className="text-blue-400 text-sm font-medium">{foundUser.beltColor || 'WHITE'} Belt</Text>
-                            </View>
-                            <View className="bg-blue-500/20 px-2 py-1 rounded">
-                                <Text className="text-blue-400 text-xs font-bold">ENCONTRADO</Text>
-                            </View>
+                    {isCancelled && (
+                        <View className="bg-red-500/20 self-start px-3 py-1 rounded-md mb-3 border border-red-500/30">
+                            <Text className="text-red-400 text-xs font-bold uppercase tracking-wider">AULA CANCELADA</Text>
                         </View>
                     )}
 
-                    <TouchableOpacity
-                        className={`w-full py-4 rounded-xl items-center ${foundUser ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
-                        disabled={!foundUser}
-                        onPress={handleConfirmAddUser}
-                    >
-                        <Text className={`font-bold text-lg ${foundUser ? 'text-white' : 'text-zinc-500'}`}>
-                            ADICIONAR À AULA
+                    <View className="flex-row justify-between items-start mb-4">
+                        <View>
+                            <Text className={`${isCancelled ? 'text-gray-500' : 'text-blue-500'} font-bold text-xl mb-1 line-through decoration-red-500`}>
+                                {displayTime}
+                            </Text>
+                            <Text className="text-white text-2xl font-bold leading-tight max-w-[280px]">
+                                {displayTitle}
+                            </Text>
+                        </View>
+                        {/* Capacity Badge */}
+                        <View className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700 items-center justify-center">
+                            <Text className="text-gray-400 text-[10px] uppercase font-bold mb-0.5">LOTAÇÃO</Text>
+                            <Text className={`text-sm font-bold ${currentCount >= capacityTotal ? 'text-red-400' : 'text-white'}`}>
+                                {currentCount}/{capacityTotal}
+                            </Text>
+                        </View>
+                    </View>
+
+                    <View className="flex-row items-center">
+                        <Ionicons name="person-circle-outline" size={20} color="#94a3b8" />
+                        <Text className="text-gray-400 text-sm ml-2 font-medium">
+                            {instructorName}
                         </Text>
-                    </TouchableOpacity>
+                    </View>
                 </View>
             </View>
+        );
+    };
+
+    // --- Modal Content ---
+
+    const renderBeltSelector = () => {
+        const belts = ['WHITE', 'BLUE', 'PURPLE', 'BROWN', 'BLACK'];
+        const beltColors: Record<string, string> = {
+            'WHITE': '#f8fafc',
+            'BLUE': '#3b82f6',
+            'PURPLE': '#a855f7',
+            'BROWN': '#78350f',
+            'BLACK': '#171717',
+        };
+
+        return (
+            <View className="flex-row justify-between mt-4 mb-8">
+                {belts.map((belt) => (
+                    <TouchableOpacity
+                        key={belt}
+                        onPress={() => setGuestBelt(belt)}
+                        className={`w-12 h-12 rounded-full items-center justify-center border-2 ${guestBelt === belt ? 'border-blue-500 scale-110' : 'border-transparent'}`}
+                        style={{ backgroundColor: beltColors[belt], borderColor: guestBelt === belt ? '#3b82f6' : (belt === 'WHITE' ? '#cbd5e1' : 'transparent') }}
+                    >
+                        {guestBelt === belt && (
+                            <Ionicons name="checkmark" size={24} color={belt === 'WHITE' ? 'black' : 'white'} />
+                        )}
+                    </TouchableOpacity>
+                ))}
+            </View>
+        );
+    }
+
+    const renderAddModal = () => (
+        <Modal
+            animationType="slide"
+            transparent={true}
+            visible={showAddModal}
+            onRequestClose={closeModal}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <View className="flex-1 bg-black/80 justify-end sm:justify-center">
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === "ios" ? "padding" : "height"}
+                        className="w-full"
+                    >
+                        <View className="bg-zinc-900 w-full rounded-t-3xl sm:rounded-2xl p-6 border-t border-zinc-800 shadow-2xl pb-10">
+                            <View className="flex-row justify-between items-center mb-6">
+                                <Text className="text-white text-xl font-bold">Adicionar Presença</Text>
+                                <TouchableOpacity onPress={closeModal} className="p-2 -mr-2">
+                                    <Ionicons name="close" size={24} color="#6b7280" />
+                                </TouchableOpacity>
+                            </View>
+
+                            {/* MODE SWITCHER */}
+                            {addMode === 'STUDENT' ? (
+                                <>
+                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Buscar Aluno (ID)</Text>
+                                    <TextInput
+                                        className="bg-zinc-800 text-white p-4 rounded-xl text-xl font-mono text-center border border-zinc-700 mb-4 tracking-widest"
+                                        placeholder="XXXX-XXXX"
+                                        placeholderTextColor="#52525b"
+                                        value={userIdInput}
+                                        onChangeText={handleSearchUser}
+                                        autoCapitalize="characters"
+                                        maxLength={9}
+                                        autoFocus
+                                    />
+
+                                    {isSearchingUser && <ActivityIndicator className="mb-4" color="#3b82f6" />}
+
+                                    {foundUser ? (
+                                        <View className="bg-zinc-800 p-4 rounded-xl border border-blue-500/30 mb-6 flex-row items-center animate-pulse">
+                                            <Image source={{ uri: foundUser.avatarUrl }} className="w-12 h-12 rounded-full bg-zinc-700 mr-3" />
+                                            <View>
+                                                <Text className="text-white font-bold text-lg">{foundUser.name}</Text>
+                                                <Text className="text-blue-400 text-sm">{foundUser.beltColor} Belt</Text>
+                                            </View>
+                                            <View className="ml-auto bg-green-500/20 px-2 py-1 rounded">
+                                                <Ionicons name="checkmark" size={16} color="#4ade80" />
+                                            </View>
+                                        </View>
+                                    ) : (
+                                        !isSearchingUser && userIdInput.length === 9 && (
+                                            <Text className="text-red-400 text-center mb-4">Usuário não encontrado.</Text>
+                                        )
+                                    )}
+
+                                    <TouchableOpacity
+                                        className={`w-full py-4 rounded-xl items-center mb-4 ${foundUser ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
+                                        disabled={!foundUser}
+                                        onPress={handleAddStudent}
+                                    >
+                                        <Text className={`font-bold text-lg ${foundUser ? 'text-white' : 'text-zinc-500'}`}>CONFIRMAR</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => setAddMode('GUEST')}
+                                        className="items-center py-2"
+                                    >
+                                        <Text className="text-blue-500 font-medium">Aluno sem conta? Cadastrar visitante</Text>
+                                    </TouchableOpacity>
+                                </>
+                            ) : (
+                                // GUEST MODE
+                                <>
+                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Nome do Visitante</Text>
+                                    <TextInput
+                                        className="bg-zinc-800 text-white p-4 rounded-xl text-lg border border-zinc-700 mb-6"
+                                        placeholder="Ex: João Silva"
+                                        placeholderTextColor="#52525b"
+                                        value={guestName}
+                                        onChangeText={setGuestName}
+                                        autoFocus
+                                    />
+
+                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Graduação</Text>
+                                    {renderBeltSelector()}
+
+                                    <TouchableOpacity
+                                        className={`w-full py-4 rounded-xl items-center mb-4 ${guestName.trim().length > 2 ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
+                                        disabled={guestName.trim().length <= 2}
+                                        onPress={handleAddGuest}
+                                    >
+                                        <Text className={`font-bold text-lg ${guestName.trim().length > 2 ? 'text-white' : 'text-zinc-500'}`}>ADICIONAR VISITANTE</Text>
+                                    </TouchableOpacity>
+
+                                    <TouchableOpacity
+                                        onPress={() => setAddMode('STUDENT')}
+                                        className="items-center py-2"
+                                    >
+                                        <Text className="text-gray-400/80 font-medium text-sm">Cancelar e buscar aluno</Text>
+                                    </TouchableOpacity>
+                                </>
+                            )}
+                        </View>
+                    </KeyboardAvoidingView>
+                </View>
+            </TouchableWithoutFeedback>
         </Modal>
     );
 
+    // --- List Item ---
+
+    const renderAttendanceItem = ({ item }: { item: any }) => {
+        const isGuest = item.isVisitor;
+        const beltColor = item.beltColor || 'WHITE';
+
+        const beltColorsMap: Record<string, string> = {
+            'WHITE': 'bg-white',
+            'BLUE': 'bg-blue-600',
+            'PURPLE': 'bg-purple-600',
+            'BROWN': 'bg-amber-800',
+            'BLACK': 'bg-red-600', // Using red for black belt distinction in UI or just black
+        };
+        // For strict visual requirements "Black Top -> White Bottom", usually Black belt is Black color.
+        // User asked for "Seletor de cores... (Black)" in guest. 
+        // In list, display the belt.
+
+        return (
+            <View className="flex-row items-center mb-3 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/50">
+                {/* Avatar */}
+                <View className="w-12 h-12 rounded-full bg-zinc-800 overflow-hidden mr-4 border border-white/10 items-center justify-center">
+                    {item.avatarUrl ? (
+                        <Image source={{ uri: item.avatarUrl }} className="w-full h-full" />
+                    ) : (
+                        <Text className="text-gray-500 text-lg font-bold">{item.name?.charAt(0).toUpperCase()}</Text>
+                    )}
+                </View>
+
+                {/* Info */}
+                <View className="flex-1">
+                    <View className="flex-row items-center">
+                        <Text className="text-white font-bold text-base mr-2">{item.name}</Text>
+                        {isGuest && (
+                            <View className="bg-zinc-800 px-1.5 py-0.5 rounded border border-zinc-700">
+                                <Text className="text-gray-400 text-[10px] font-bold tracking-wide">VISITANTE</Text>
+                            </View>
+                        )}
+                    </View>
+
+                    <View className="flex-row items-center mt-1">
+                        {/* Belt Indicator */}
+                        <View className={`w-3 h-3 rounded-full mr-2 ${beltColor === 'BLACK' ? 'bg-zinc-950 border border-red-600' : (beltColorsMap[beltColor] || 'bg-gray-400')}`} />
+                        <Text className="text-gray-400 text-xs font-medium">{formatBeltName(beltColor)}</Text>
+                    </View>
+                </View>
+
+                {/* Check Status */}
+                {item.status === 'PRESENT' && (
+                    <View className="w-8 h-8 rounded-full bg-blue-600 items-center justify-center shadow-lg shadow-blue-500/20">
+                        <Ionicons name="checkmark" size={18} color="white" />
+                    </View>
+                )}
+                {item.status === 'PENDING' && (
+                    <View className="w-8 h-8 rounded-full bg-zinc-800 border border-zinc-700 items-center justify-center">
+                        <View className="w-2 h-2 bg-zinc-500 rounded-full" />
+                    </View>
+                )}
+                {item.status === 'ABSENT' && (
+                    <View className="w-8 h-8 rounded-full bg-red-500/10 items-center justify-center">
+                        <Ionicons name="close" size={18} color="#ef4444" />
+                    </View>
+                )}
+            </View>
+        );
+    };
+
     return (
-        <SafeAreaView className="flex-1 bg-slate-900">
+        <SafeAreaView className="flex-1 bg-slate-950">
             <StatusBar style="light" />
 
             {renderHeader()}
@@ -353,48 +478,42 @@ export default function ClassDetailScreen() {
                     <ActivityIndicator size="large" color="#2563eb" />
                 </View>
             ) : (
-                <View className="flex-1 relative">
-                    <ScrollView className="flex-1">
+                <View className="flex-1">
+                    <View className="pb-4">
                         {renderHero()}
-                        {/* Instructor is now inside Hero */}
-                        {isHistory && renderSummary()}
-                        {renderAttendanceList()}
+
+                        {/* Segmented Control */}
+                        <View className="flex-row mx-4 mb-4 bg-zinc-900 rounded-lg p-1 border border-zinc-800">
+                            {[
+                                { key: 'CONFIRMED', label: 'Confirmados' },
+                                { key: 'PENDING', label: 'Pendentes' },
+                                { key: 'ABSENT', label: 'Ausentes' }
+                            ].map((tab) => (
+                                <TouchableOpacity
+                                    key={tab.key}
+                                    onPress={() => setSelectedTab(tab.key as any)}
+                                    className={`flex-1 py-1.5 items-center rounded-md ${selectedTab === tab.key ? 'bg-zinc-800 shadow-sm' : 'bg-transparent'}`}
+                                >
+                                    <Text className={`text-xs font-bold ${selectedTab === tab.key ? 'text-blue-400' : 'text-gray-500'}`}>
+                                        {tab.label}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    <ScrollView className={`flex-1 px-4 ${isCancelled ? 'opacity-50' : ''}`}>
+                        {sortedStudents.map((item: any) => (
+                            <View key={item.id}>
+                                {renderAttendanceItem({ item })}
+                            </View>
+                        ))}
+                        <View className="h-20" />
                     </ScrollView>
-                    {renderFAB()}
                 </View>
             )}
 
-            {renderAddUserModal()}
-
-            <Modal
-                animationType="fade"
-                transparent={true}
-                visible={showConfirmation}
-                onRequestClose={() => setShowConfirmation(false)}
-            >
-                {/* Keep original confirmation modal just in case, or remove if not needed. Keeping for safety if used elsewhere */}
-                <View className="flex-1 bg-black/80 items-center justify-center px-6">
-                    <View className="bg-zinc-900 p-8 rounded-2xl items-center border border-zinc-800 w-full max-w-xs shadow-2xl">
-                        <View className="h-16 w-16 bg-green-900/30 rounded-full items-center justify-center mb-6 border border-green-900/50">
-                            <Ionicons name="checkmark" size={32} color="#4ade80" />
-                        </View>
-
-                        <Text className="text-white text-xl font-bold text-center mb-2">
-                            Presença Confirmada!
-                        </Text>
-                        <Text className="text-gray-400 text-center text-sm mb-8 leading-relaxed">
-                            Bom treino! Te vejo no tatame.
-                        </Text>
-
-                        <TouchableOpacity
-                            className="bg-white w-full py-3 rounded-lg items-center"
-                            onPress={() => setShowConfirmation(false)}
-                        >
-                            <Text className="text-zinc-900 font-bold">FECHAR</Text>
-                        </TouchableOpacity>
-                    </View>
-                </View>
-            </Modal>
+            {renderAddModal()}
         </SafeAreaView>
     );
 }

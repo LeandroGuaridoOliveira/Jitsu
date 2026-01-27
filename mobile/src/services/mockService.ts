@@ -343,6 +343,13 @@ export class MockService {
 
     // --- CLASS DETAILS & ATTENDANCE ---
 
+    private static cancelledSessions: Set<string> = new Set();
+
+    static async cancelSession(classId: string): Promise<void> {
+        await this.delay(LATENCY_MS);
+        this.cancelledSessions.add(classId);
+    }
+
     static async findUserByCode(code: string): Promise<User | null> {
         await this.delay(LATENCY_MS);
         if (code === 'A1B2-8899') {
@@ -356,9 +363,18 @@ export class MockService {
         return null;
     }
 
-    static async addStudentToClass(sessionId: string, userId: string): Promise<void> {
+    static async addStudentToClass(sessionId: string, input: string | { guestName: string; guestBelt: string }): Promise<void> {
         await this.delay(LATENCY_MS);
-        console.log(`[MOCK] Added user ${userId} to class ${sessionId}`);
+
+        if (typeof input === 'string') {
+            console.log(`[MOCK] Added user ${input} to class ${sessionId}`);
+            // In a real app, validation and DB insert happens here
+            return;
+        }
+
+        // Handle Guest
+        const { guestName, guestBelt } = input;
+        console.log(`[MOCK] Added GUEST ${guestName} (${guestBelt}) to class ${sessionId}`);
     }
 
     static async getClassDetails(classId: string): Promise<{
@@ -384,6 +400,23 @@ export class MockService {
 
         // Mock logic: If classId starts with 'h_', it's history (past). Else future.
         const isHistory = classId.startsWith('h_');
+        const isCancelled = this.cancelledSessions.has(classId);
+
+        if (isCancelled) {
+            return {
+                id: classId,
+                title: 'Jiu-Jitsu Fundamentals',
+                time: '07:00 - 08:30',
+                instructor: { name: 'Prof. Silva', avatarUrl: 'https://ui-avatars.com/api/?name=Silva&background=random' },
+                location: 'Main Dojo - Mat B',
+                date: new Date().toISOString(),
+                status: 'CANCELLED',
+                userStatus: 'NONE',
+                attendanceList: [
+                    { id: '10', name: 'Carlos Ribeiro', beltColor: 'BLACK', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=10' }
+                ]
+            };
+        }
 
         if (isHistory) {
             return {
