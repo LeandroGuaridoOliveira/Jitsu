@@ -14,6 +14,8 @@ import JoinTeamScreen from '../screens/JoinTeamScreen';
 import TeamContextScreen from '../features/community/screens/TeamContextScreen';
 import TeamSettingsScreen from '../features/community/screens/TeamSettingsScreen';
 import TeamInviteScreen from '../features/community/screens/TeamInviteScreen';
+import EditClassScreen from '../features/schedule/screens/EditClassScreen';
+
 import AddRecurringClassScreen from '../features/schedule/screens/AddRecurringClassScreen';
 import MonthlyHistoryScreen from '../features/schedule/screens/MonthlyHistoryScreen';
 import AttendanceScreen from '../screens/AttendanceScreen';
@@ -40,6 +42,7 @@ export default function AppNavigator() {
                         <Stack.Screen name="TeamSettings" component={TeamSettingsScreen} />
                         <Stack.Screen name="TeamContext" component={TeamContextScreen} />
                         <Stack.Screen name="AddRecurringClass" component={AddRecurringClassScreen} />
+                        <Stack.Screen name="EditClass" component={EditClassScreen} />
                         <Stack.Screen name="MonthlyHistory" component={MonthlyHistoryScreen} />
                         <Stack.Screen name="Attendance" component={AttendanceScreen} />
                         <Stack.Screen name="CheckInSuccess" component={CheckInSuccessScreen} options={{ presentation: 'modal' }} />

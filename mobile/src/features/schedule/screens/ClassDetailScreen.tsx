@@ -29,7 +29,6 @@ export default function ClassDetailScreen() {
     // UI state
     const [selectedTab, setSelectedTab] = useState<'CONFIRMED' | 'PENDING' | 'ABSENT'>('CONFIRMED');
     const [showAddModal, setShowAddModal] = useState(false);
-    const [showEditModal, setShowEditModal] = useState(false);
 
     // Add Modal State
     const [addMode, setAddMode] = useState<'STUDENT' | 'GUEST'>('STUDENT');
@@ -142,20 +141,7 @@ export default function ClassDetailScreen() {
         setAddMode('STUDENT');
     };
 
-    const handleToggleClassStatus = async () => {
-        setLoading(true);
-        try {
-            if (isCancelled) {
-                await MockService.restoreSession(classId);
-            } else {
-                await MockService.cancelSession(classId);
-            }
-            setShowEditModal(false);
-            loadDetails();
-        } catch (e) {
-            console.error(e);
-        }
-    };
+
 
     // --- RENDERERS ---
 
@@ -174,7 +160,7 @@ export default function ClassDetailScreen() {
 
             {/* Top Right: Edit Button */}
             <TouchableOpacity
-                onPress={() => setShowEditModal(true)}
+                onPress={() => navigation.navigate('EditClass', { classId })}
                 className="px-2 py-1"
             >
                 <Text className="text-blue-500 font-bold text-base">Editar</Text>

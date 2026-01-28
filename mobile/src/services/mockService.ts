@@ -452,28 +452,48 @@ export class MockService {
             };
         }
 
-        // Future Class - With mock data for testing the list
-        return {
+        // Helper to find the schedule item for this classId to mock detailed data
+        const schedule = await this.getWeeklySchedule('t1');
+        const scheduleItem = schedule.find(s => s.id === classId || classId.startsWith(s.id)); // Simple mock matching
+
+        const baseData: any = {
             id: classId,
-            title: 'Jiu-Jitsu Fundamentals',
-            time: '07:00 - 08:30',
-            instructor: { name: 'Prof. Silva', avatarUrl: 'https://ui-avatars.com/api/?name=Silva&background=random' },
+            title: scheduleItem?.title || 'Jiu-Jitsu Fundamentals',
+            time: scheduleItem ? `${scheduleItem.startTime} - ${scheduleItem.endTime}` : '07:00 - 08:30',
+            // Mock matching instructor from ID
+            instructor: { name: 'Prof. Silva', avatarUrl: 'https://ui-avatars.com/api/?name=Silva&background=random', id: scheduleItem?.instructorIds[0] },
             location: 'Main Dojo - Mat B',
             date: new Date().toISOString(),
             status: 'SCHEDULED',
-            userStatus: 'NONE', // Not checked in yet
+            userStatus: 'NONE',
+            // Add extra fields for Edit Screen
+            type: scheduleItem?.type, // e.g., 'Gi', 'No-Gi'
+            tags: scheduleItem?.tags,
+            dayOfWeek: scheduleItem?.dayOfWeek,
+            instructorIds: scheduleItem?.instructorIds || [],
             attendanceList: [
                 { id: '10', name: 'Carlos Ribeiro', beltColor: 'BLACK', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=10' },
                 { id: '11', name: 'Fernanda Lima', beltColor: 'BROWN', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=11' },
                 { id: '1', name: 'Leandro Oliveira', beltColor: 'BLUE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=leandro' },
-                { id: '12', name: 'Bruno Santos', beltColor: 'BLUE', status: 'PRESENT', avatarUrl: 'https://i.pravatar.cc/150?u=12' },
-                { id: '13', name: 'Amanda Costa', beltColor: 'WHITE', status: 'ABSENT', avatarUrl: 'https://i.pravatar.cc/150?u=13' },
-                { id: '14', name: 'Visitante Pedro', beltColor: 'PURPLE', status: 'PRESENT', isVisitor: true, avatarUrl: 'https://ui-avatars.com/api/?name=Pedro&background=random' },
-                { id: '15', name: 'Lucas Silva', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=15' },
-                { id: '16', name: 'Maria Souza', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=16' },
-                { id: '17', name: 'Jorge', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=17' },
-                { id: '18', name: 'Ana', beltColor: 'WHITE', status: 'PENDING', avatarUrl: 'https://i.pravatar.cc/150?u=18' },
             ]
         };
+
+        if (isCancelled) {
+            return { ...baseData, status: 'CANCELLED', title: baseData.title + ' (Cancelada)' };
+        }
+
+        if (isHistory) {
+            return {
+                ...baseData,
+                title: 'Advanced No-Gi',
+                type: 'No-Gi',
+                tags: ['NOGI'],
+                status: 'COMPLETED',
+                userStatus: 'PRESENT',
+                date: '2025-10-15',
+            };
+        }
+
+        return baseData;
     }
 }

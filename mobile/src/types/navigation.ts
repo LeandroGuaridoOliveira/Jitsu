@@ -6,20 +6,15 @@ export type RootStackParamList = {
     TeamInfo: { teamId: string };
     ClassDetails: {
         classId: string;
-        // Optional preview data to show while loading
-        preview?: {
-            title: string;
-            time: string;
-            instructor?: string;
-            CheckInSuccess: undefined;
-            CreateTeam: undefined;
-            JoinTeam: undefined;
-            TeamContext: { teamId: string };
-            TeamSettings: { teamId: string };
-            TeamInvite: { teamId: string };
-            ClassDetails: { classId: string; preview?: { title: string; time: string; instructor: string } };
-            EditClass: { classId: string };
-            AddRecurringClass: { teamId: string };
-            MonthlyHistory: undefined;
-            Attendance: undefined;
-        };
+        preview?: { title: string; time: string; instructor: string }
+    };
+    EditClass: { classId: string };
+    AddRecurringClass: { teamId: string };
+    MonthlyHistory: undefined;
+    Attendance: undefined;
+    CheckInSuccess: undefined;
+    CreateTeam: undefined;
+    JoinTeam: undefined;
+    TeamContext: { teamId: string };
+    TeamSettings: { teamId: string };
+    TeamInvite: { teamId: string };
