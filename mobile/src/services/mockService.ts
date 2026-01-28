@@ -292,13 +292,22 @@ export class MockService {
             },
         ];
 
-        return schedule;
+        return schedule.map(item => ({
+            ...item,
+            // Ad-hoc property for UI decoration (in a real app, this would come from backend status)
+            isCancelled: this.cancelledSessions.has(item.id)
+        }));
     }
 
     static async createWeeklyScheduleItem(item: any): Promise<void> {
         await this.delay(LATENCY_MS);
         console.log('[MOCK] Created Weekly Schedule Item:', item);
         // In a real app, this would save to the backend
+    }
+
+    static async updateClass(id: string, data: any): Promise<void> {
+        await this.delay(LATENCY_MS);
+        console.log(`[MOCK] Updated class ${id}:`, data);
     }
 
     // --- MONTHLY HISTORY ---
@@ -348,6 +357,11 @@ export class MockService {
     static async cancelSession(classId: string): Promise<void> {
         await this.delay(LATENCY_MS);
         this.cancelledSessions.add(classId);
+    }
+
+    static async restoreSession(classId: string): Promise<void> {
+        await this.delay(LATENCY_MS);
+        this.cancelledSessions.delete(classId);
     }
 
     static async findUserByCode(code: string): Promise<User | null> {

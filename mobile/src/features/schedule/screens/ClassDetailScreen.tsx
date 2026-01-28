@@ -29,6 +29,7 @@ export default function ClassDetailScreen() {
     // UI state
     const [selectedTab, setSelectedTab] = useState<'CONFIRMED' | 'PENDING' | 'ABSENT'>('CONFIRMED');
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
 
     // Add Modal State
     const [addMode, setAddMode] = useState<'STUDENT' | 'GUEST'>('STUDENT');
@@ -58,57 +59,7 @@ export default function ClassDetailScreen() {
         }
     };
 
-    const handleEditClass = () => {
-        Alert.alert(
-            "Opções da Aula",
-            "Selecione uma ação",
-            [
-                {
-                    text: "Alterar Instrutor/Detalhes",
-                    onPress: () => console.log("Edit Details Pressed"),
-                },
-                {
-                    text: "Cancelar Aula",
-                    style: "destructive",
-                    onPress: confirmCancelClass
-                },
-                {
-                    text: "Voltar",
-                    style: "cancel"
-                }
-            ]
-        );
-    };
-
-    const confirmCancelClass = () => {
-        Alert.alert(
-            "Confirmar Cancelamento",
-            "Tem certeza que deseja cancelar esta aula? Esta ação não pode ser desfeita.",
-            [
-                { text: "Não", style: "cancel" },
-                {
-                    text: "Sim, Cancelar",
-                    style: "destructive",
-                    onPress: async () => {
-                        setLoading(true);
-                        try {
-                            await MockService.cancelSession(classId);
-                            loadDetails(); // Refresh to get CANCELLED status
-                        } catch (e) {
-                            console.error(e);
-                        }
-                    }
-                }
-            ]
-        );
-    };
-
-    // Calculate Capacity
-    const capacityTotal = 30; // Mock fixed capacity
-    const currentCount = useMemo(() => {
-        if (!details?.attendanceList) return 0;
-        return details.attendanceList.filter((s: any) => s.status === 'PRESENT').length;
-    }, [details]);
+    // Capacity has been removed per request
 
     const sortedStudents = useMemo(() => {
         if (!details?.attendanceList) return [];
@@ -191,6 +142,21 @@ export default function ClassDetailScreen() {
         setAddMode('STUDENT');
     };
 
+    const handleToggleClassStatus = async () => {
+        setLoading(true);
+        try {
+            if (isCancelled) {
+                await MockService.restoreSession(classId);
+            } else {
+                await MockService.cancelSession(classId);
+            }
+            setShowEditModal(false);
+            loadDetails();
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
     // --- RENDERERS ---
 
     const renderHeader = () => (
@@ -208,10 +174,10 @@ export default function ClassDetailScreen() {
 
             {/* Top Right: Edit Button */}
             <TouchableOpacity
-                onPress={handleEditClass}
+                onPress={() => setShowEditModal(true)}
                 className="px-2 py-1"
             >
-                <Text className="text-red-500 font-bold text-base">Editar</Text>
+                <Text className="text-blue-500 font-bold text-base">Editar</Text>
             </TouchableOpacity>
         </View>
     );
@@ -240,13 +206,6 @@ export default function ClassDetailScreen() {
                             </Text>
                             <Text className="text-white text-2xl font-bold leading-tight max-w-[280px]">
                                 {displayTitle}
-                            </Text>
-                        </View>
-                        {/* Capacity Badge */}
-                        <View className="bg-zinc-800 px-3 py-1.5 rounded-lg border border-zinc-700 items-center justify-center">
-                            <Text className="text-gray-400 text-[10px] uppercase font-bold mb-0.5">LOTAÇÃO</Text>
-                            <Text className={`text-sm font-bold ${currentCount >= capacityTotal ? 'text-red-400' : 'text-white'}`}>
-                                {currentCount}/{capacityTotal}
                             </Text>
                         </View>
                     </View>

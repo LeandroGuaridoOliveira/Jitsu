@@ -11,15 +11,15 @@ export type RootStackParamList = {
             title: string;
             time: string;
             instructor?: string;
-        }
-    };
-    CheckInSuccess: undefined;
-    CreateTeam: undefined;
-    JoinTeam: undefined;
-    TeamContext: { teamId: string };
-    TeamSettings: { teamId: string };
-    TeamInvite: { teamId: string };
-    AddRecurringClass: { teamId: string };
-    MonthlyHistory: undefined;
-    Attendance: undefined;
-};
+            CheckInSuccess: undefined;
+            CreateTeam: undefined;
+            JoinTeam: undefined;
+            TeamContext: { teamId: string };
+            TeamSettings: { teamId: string };
+            TeamInvite: { teamId: string };
+            ClassDetails: { classId: string; preview?: { title: string; time: string; instructor: string } };
+            EditClass: { classId: string };
+            AddRecurringClass: { teamId: string };
+            MonthlyHistory: undefined;
+            Attendance: undefined;
+        };
