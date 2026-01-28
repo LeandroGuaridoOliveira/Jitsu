@@ -35,7 +35,7 @@ export default function ScheduleScreen() {
 
     // Day Selection State
     const [selectedDay, setSelectedDay] = useState<DayOfWeek>('MONDAY');
-    const [weekDates, setWeekDates] = useState<{ day: string, date: string, fullDate: Date, key: DayOfWeek }[]>([]);
+    const [weekDates, setWeekDates] = useState<{ day: string, date: string, fullDate: Date, key: DayOfWeek, isToday: boolean }[]>([]);
 
     useEffect(() => {
         loadSchedule();
@@ -76,7 +76,8 @@ export default function ScheduleScreen() {
                 day: format(d, 'EEE', { locale: ptBR }).toUpperCase().substring(0, 3),
                 date: format(d, 'd'),
                 fullDate: d,
-                key: key
+                key: key,
+                isToday: isSameDay(d, today)
             });
         }
         setWeekDates(days);
@@ -124,52 +125,54 @@ export default function ScheduleScreen() {
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
                 {weekDates.map((item) => {
                     const isSelected = selectedDay === item.key;
+                    const isToday = item.isToday;
+
+                    let containerStyle = '';
+                    let dayTextStyle = '';
+                    let dateTextStyle = '';
+
+                    // Logic for 4 states
+                    // 1. Today + Selected: Blue BG, White Text
+                    if (isToday && isSelected) {
+                        containerStyle = 'bg-blue-600 border-2 border-blue-600';
+                        dayTextStyle = 'text-white/80';
+                        dateTextStyle = 'text-white';
+                    }
+                    // 2. Today + Not Selected: Transparent/Dark BG, Blue Border, White Text
+                    else if (isToday && !isSelected) {
+                        containerStyle = 'bg-zinc-800 border-2 border-blue-600';
+                        dayTextStyle = 'text-blue-400';
+                        dateTextStyle = 'text-white';
+                    }
+                    // 3. Other Day + Selected: Blue BG, White Text
+                    else if (!isToday && isSelected) {
+                        containerStyle = 'bg-blue-600 border-2 border-blue-600';
+                        dayTextStyle = 'text-white/80';
+                        dateTextStyle = 'text-white';
+                    }
+                    // 4. Other Day + Not Selected: Dark BG, Zinc Text
+                    else {
+                        containerStyle = 'bg-zinc-800 border-2 border-zinc-800';
+                        dayTextStyle = 'text-zinc-500';
+                        dateTextStyle = 'text-zinc-400';
+                    }
+
                     return (
                         <TouchableOpacity
                             key={item.key}
                             onPress={() => setSelectedDay(item.key)}
-                            className={`mr-3 py-3 px-4 items-center rounded-2xl min-w-[64px] ${isSelected ? 'bg-blue-600' : 'bg-slate-800/50'}`}
+                            className={`mr-3 py-3 px-4 items-center rounded-2xl min-w-[68px] ${containerStyle}`}
                         >
-                            <Text className={`text-xs font-bold mb-1 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
+                            <Text className={`text-xs font-bold mb-1 ${dayTextStyle}`}>
                                 {item.day}
                             </Text>
-                            <Text className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                            <Text className={`text-xl font-bold ${dateTextStyle}`}>
                                 {item.date}
                             </Text>
-                            {isSelected && <View className="w-1.5 h-1.5 rounded-full bg-white mt-1.5" />}
                         </TouchableOpacity>
                     );
                 })}
             </ScrollView>
-        </View>
-    );
-
-    const renderNextClassCard = () => (
-        <View className="mx-5 mt-2 mb-6">
-            <View className="bg-red-600 rounded-3xl p-6 shadow-xl shadow-red-900/20">
-                <View className="flex-row justify-between items-start mb-5">
-                    <View className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm self-start">
-                        <Text className="text-white font-bold text-[10px] tracking-wider uppercase">Próxima Aula</Text>
-                    </View>
-                    <View className="flex-row items-center space-x-1.5 bg-black/20 px-2.5 py-1 rounded-lg">
-                        <Ionicons name="time" size={12} color="white" />
-                        <Text className="text-white font-bold text-xs">19:00</Text>
-                    </View>
-                </View>
-
-                <View className="mb-6">
-                    <Text className="text-white text-3xl font-bold mb-1 tracking-tight leading-tight">Jiu-Jitsu Avançado</Text>
-                    <Text className="text-red-100 text-base font-medium">Sensei Renato • Tatame A</Text>
-                </View>
-
-                <TouchableOpacity
-                    className="bg-white w-full py-3.5 rounded-xl items-center shadow-sm active:scale-[0.98] transition-all"
-                    activeOpacity={0.9}
-                    onPress={() => Alert.alert('Check-in', 'Check-in realizado com sucesso!')}
-                >
-                    <Text className="text-red-600 font-extrabold text-sm tracking-widest uppercase">Check-in Agora</Text>
-                </TouchableOpacity>
-            </View>
         </View>
     );
 
@@ -189,21 +192,39 @@ export default function ScheduleScreen() {
                 <FlatList
                     data={filteredSchedule}
                     keyExtractor={(item) => item.id}
-                    ListHeaderComponent={renderNextClassCard}
-                    renderItem={({ item }) => (
-                        <ClassCard
-                            item={item}
-                            onPress={() => navigation.navigate('ClassDetails', {
-                                classId: item.id,
-                                preview: {
-                                    title: item.title,
-                                    time: `${item.startTime} - ${item.endTime}`,
-                                    instructor: item.instructorIds[0]
-                                }
-                            })}
-                        />
-                    )}
-                    contentContainerStyle={{ paddingBottom: 100, paddingTop: 16 }}
+                    renderItem={({ item, index }) => {
+                        const isLast = index === filteredSchedule.length - 1;
+                        return (
+                            <View className="flex-row px-5 mb-2">
+                                {/* Left Column: Time */}
+                                <View className="w-14 items-end mr-4 pt-1">
+                                    <Text className="text-white font-bold text-base">{item.startTime}</Text>
+                                    <Text className="text-slate-500 text-xs font-medium">{item.endTime}</Text>
+
+                                    {/* Vertical Line Connector (Optional Visual Aid for Timeline flow) */}
+                                    {!isLast && (
+                                        <View className="absolute right-[-23px] top-8 bottom-[-8px] width-[1px] bg-zinc-800/50 -z-10" />
+                                    )}
+                                </View>
+
+                                {/* Right Column: Card */}
+                                <View className="flex-1 pb-4">
+                                    <ClassCard
+                                        item={item}
+                                        onPress={() => navigation.navigate('ClassDetails', {
+                                            classId: item.id,
+                                            preview: {
+                                                title: item.title,
+                                                time: `${item.startTime} - ${item.endTime}`,
+                                                instructor: item.instructorIds[0]
+                                            }
+                                        })}
+                                    />
+                                </View>
+                            </View>
+                        );
+                    }}
+                    contentContainerStyle={{ paddingBottom: 100, paddingTop: 24 }}
                     ListEmptyComponent={
                         <View className="items-center justify-center py-10 px-10 opacity-50">
                             <Ionicons name="calendar-clear-outline" size={48} color="#71717a" />
