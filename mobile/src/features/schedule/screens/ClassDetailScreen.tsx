@@ -239,107 +239,112 @@ export default function ClassDetailScreen() {
 
     const renderAddModal = () => (
         <Modal
-            animationType="slide"
+            animationType="fade"
             transparent={true}
             visible={showAddModal}
             onRequestClose={closeModal}
         >
             <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                <View className="flex-1 bg-black/80 justify-end sm:justify-center">
+                <View className="flex-1 bg-black/80 justify-center px-4">
+                    <TouchableOpacity
+                        className="absolute inset-0"
+                        activeOpacity={1}
+                        onPress={closeModal}
+                    />
                     <KeyboardAvoidingView
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
                         className="w-full"
                     >
-                        <View className="bg-zinc-900 w-full rounded-t-3xl sm:rounded-2xl p-6 border-t border-zinc-800 shadow-2xl pb-10">
-                            <View className="flex-row justify-between items-center mb-6">
-                                <Text className="text-white text-xl font-bold">Adicionar Presença</Text>
-                                <TouchableOpacity onPress={closeModal} className="p-2 -mr-2">
-                                    <Ionicons name="close" size={24} color="#6b7280" />
-                                </TouchableOpacity>
+                        <TouchableWithoutFeedback>
+                            <View className="bg-zinc-900 w-full rounded-2xl p-6 border border-zinc-800 shadow-2xl relative z-50">
+                                <View className="flex-row justify-between items-center mb-6">
+                                    <Text className="text-white text-xl font-bold">Adicionar Presença</Text>
+                                    <TouchableOpacity onPress={closeModal} className="p-2 -mr-2">
+                                        <Ionicons name="close" size={24} color="#6b7280" />
+                                    </TouchableOpacity>
+                                </View>
+
+                                {/* MODE SWITCHER */}
+                                {addMode === 'STUDENT' ? (
+                                    <>
+                                        <Text className="text-gray-400 text-sm mb-2 font-medium">Buscar Aluno (ID)</Text>
+                                        <TextInput
+                                            className="bg-zinc-800 text-white p-4 rounded-xl text-xl font-mono text-center border border-zinc-700 mb-4 tracking-widest"
+                                            placeholder="XXXX-XXXX"
+                                            placeholderTextColor="#52525b"
+                                            value={userIdInput}
+                                            onChangeText={handleSearchUser}
+                                            autoCapitalize="characters"
+                                            maxLength={9}
+                                        />
+
+                                        {isSearchingUser && <ActivityIndicator className="mb-4" color="#3b82f6" />}
+
+                                        {foundUser ? (
+                                            <View className="bg-zinc-800 p-4 rounded-xl border border-blue-500/30 mb-6 flex-row items-center animate-pulse">
+                                                <Image source={{ uri: foundUser.avatarUrl }} className="w-12 h-12 rounded-full bg-zinc-700 mr-3" />
+                                                <View>
+                                                    <Text className="text-white font-bold text-lg">{foundUser.name}</Text>
+                                                    <Text className="text-blue-400 text-sm">{foundUser.beltColor} Belt</Text>
+                                                </View>
+                                                <View className="ml-auto bg-green-500/20 px-2 py-1 rounded">
+                                                    <Ionicons name="checkmark" size={16} color="#4ade80" />
+                                                </View>
+                                            </View>
+                                        ) : (
+                                            !isSearchingUser && userIdInput.length === 9 && (
+                                                <Text className="text-red-400 text-center mb-4">Usuário não encontrado.</Text>
+                                            )
+                                        )}
+
+                                        <TouchableOpacity
+                                            className={`w-full py-4 rounded-xl items-center mb-4 ${foundUser ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
+                                            disabled={!foundUser}
+                                            onPress={handleAddStudent}
+                                        >
+                                            <Text className={`font-bold text-lg ${foundUser ? 'text-white' : 'text-zinc-500'}`}>CONFIRMAR</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={() => setAddMode('GUEST')}
+                                            className="items-center py-2"
+                                        >
+                                            <Text className="text-blue-500 font-medium">Aluno sem conta? Cadastrar visitante</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                ) : (
+                                    // GUEST MODE
+                                    <>
+                                        <Text className="text-gray-400 text-sm mb-2 font-medium">Nome do Visitante</Text>
+                                        <TextInput
+                                            className="bg-zinc-800 text-white p-4 rounded-xl text-lg border border-zinc-700 mb-6"
+                                            placeholder="Ex: João Silva"
+                                            placeholderTextColor="#52525b"
+                                            value={guestName}
+                                            onChangeText={setGuestName}
+                                        />
+
+                                        <Text className="text-gray-400 text-sm mb-2 font-medium">Graduação</Text>
+                                        {renderBeltSelector()}
+
+                                        <TouchableOpacity
+                                            className={`w-full py-4 rounded-xl items-center mb-4 ${guestName.trim().length > 2 ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
+                                            disabled={guestName.trim().length <= 2}
+                                            onPress={handleAddGuest}
+                                        >
+                                            <Text className={`font-bold text-lg ${guestName.trim().length > 2 ? 'text-white' : 'text-zinc-500'}`}>ADICIONAR VISITANTE</Text>
+                                        </TouchableOpacity>
+
+                                        <TouchableOpacity
+                                            onPress={() => setAddMode('STUDENT')}
+                                            className="items-center py-2"
+                                        >
+                                            <Text className="text-gray-400/80 font-medium text-sm">Cancelar e buscar aluno</Text>
+                                        </TouchableOpacity>
+                                    </>
+                                )}
                             </View>
-
-                            {/* MODE SWITCHER */}
-                            {addMode === 'STUDENT' ? (
-                                <>
-                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Buscar Aluno (ID)</Text>
-                                    <TextInput
-                                        className="bg-zinc-800 text-white p-4 rounded-xl text-xl font-mono text-center border border-zinc-700 mb-4 tracking-widest"
-                                        placeholder="XXXX-XXXX"
-                                        placeholderTextColor="#52525b"
-                                        value={userIdInput}
-                                        onChangeText={handleSearchUser}
-                                        autoCapitalize="characters"
-                                        maxLength={9}
-                                        autoFocus
-                                    />
-
-                                    {isSearchingUser && <ActivityIndicator className="mb-4" color="#3b82f6" />}
-
-                                    {foundUser ? (
-                                        <View className="bg-zinc-800 p-4 rounded-xl border border-blue-500/30 mb-6 flex-row items-center animate-pulse">
-                                            <Image source={{ uri: foundUser.avatarUrl }} className="w-12 h-12 rounded-full bg-zinc-700 mr-3" />
-                                            <View>
-                                                <Text className="text-white font-bold text-lg">{foundUser.name}</Text>
-                                                <Text className="text-blue-400 text-sm">{foundUser.beltColor} Belt</Text>
-                                            </View>
-                                            <View className="ml-auto bg-green-500/20 px-2 py-1 rounded">
-                                                <Ionicons name="checkmark" size={16} color="#4ade80" />
-                                            </View>
-                                        </View>
-                                    ) : (
-                                        !isSearchingUser && userIdInput.length === 9 && (
-                                            <Text className="text-red-400 text-center mb-4">Usuário não encontrado.</Text>
-                                        )
-                                    )}
-
-                                    <TouchableOpacity
-                                        className={`w-full py-4 rounded-xl items-center mb-4 ${foundUser ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
-                                        disabled={!foundUser}
-                                        onPress={handleAddStudent}
-                                    >
-                                        <Text className={`font-bold text-lg ${foundUser ? 'text-white' : 'text-zinc-500'}`}>CONFIRMAR</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        onPress={() => setAddMode('GUEST')}
-                                        className="items-center py-2"
-                                    >
-                                        <Text className="text-blue-500 font-medium">Aluno sem conta? Cadastrar visitante</Text>
-                                    </TouchableOpacity>
-                                </>
-                            ) : (
-                                // GUEST MODE
-                                <>
-                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Nome do Visitante</Text>
-                                    <TextInput
-                                        className="bg-zinc-800 text-white p-4 rounded-xl text-lg border border-zinc-700 mb-6"
-                                        placeholder="Ex: João Silva"
-                                        placeholderTextColor="#52525b"
-                                        value={guestName}
-                                        onChangeText={setGuestName}
-                                        autoFocus
-                                    />
-
-                                    <Text className="text-gray-400 text-sm mb-2 font-medium">Graduação</Text>
-                                    {renderBeltSelector()}
-
-                                    <TouchableOpacity
-                                        className={`w-full py-4 rounded-xl items-center mb-4 ${guestName.trim().length > 2 ? 'bg-blue-600' : 'bg-zinc-800 opacity-50'}`}
-                                        disabled={guestName.trim().length <= 2}
-                                        onPress={handleAddGuest}
-                                    >
-                                        <Text className={`font-bold text-lg ${guestName.trim().length > 2 ? 'text-white' : 'text-zinc-500'}`}>ADICIONAR VISITANTE</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity
-                                        onPress={() => setAddMode('STUDENT')}
-                                        className="items-center py-2"
-                                    >
-                                        <Text className="text-gray-400/80 font-medium text-sm">Cancelar e buscar aluno</Text>
-                                    </TouchableOpacity>
-                                </>
-                            )}
-                        </View>
+                        </TouchableWithoutFeedback>
                     </KeyboardAvoidingView>
                 </View>
             </TouchableWithoutFeedback>

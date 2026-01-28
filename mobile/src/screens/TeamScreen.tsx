@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, SafeAreaView, TouchableOpacity, FlatList, ActivityIndicator, Alert, Modal } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -15,6 +15,7 @@ export default function TeamScreen() {
     // State
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [showAddModal, setShowAddModal] = useState(false);
 
     // Initial Data Fetch
     useEffect(() => {
@@ -35,24 +36,18 @@ export default function TeamScreen() {
 
     // Header Actions
     const handleAddPress = () => {
-        Alert.alert(
-            'New Team',
-            'Would you like to join an existing academy or create a new one?',
-            [
-                { text: 'Cancel', style: 'cancel' },
-                {
-                    text: 'Join with Code',
-                    style: 'default',
-                    onPress: () => navigation.navigate('JoinTeam')
-                },
-                {
-                    text: 'Create Team',
-                    style: 'default',
-                    onPress: () => navigation.navigate('CreateTeam')
-                }
-            ]
-        );
+        setShowAddModal(true);
     };
+
+    const handleCreate = () => {
+        setShowAddModal(false);
+        navigation.navigate('CreateTeam');
+    }
+
+    const handleJoin = () => {
+        setShowAddModal(false);
+        navigation.navigate('JoinTeam');
+    }
 
     const handleTeamPress = (teamId: string) => {
         navigation.navigate('TeamContext', { teamId });
@@ -77,7 +72,7 @@ export default function TeamScreen() {
             <View className="flex-1">
                 <Text className="text-white font-bold text-lg leading-6">{item.name}</Text>
                 <View className="flex-row items-center mt-0.5">
-                    <Text className="text-red-500 text-[10px] font-bold uppercase tracking-wide mr-2">{item.role}</Text>
+                    <Text className="text-blue-500 text-[10px] font-bold uppercase tracking-wide mr-2">{item.role}</Text>
                     <View className="w-1 h-1 rounded-full bg-zinc-700 mr-2" />
                     <Text className="text-zinc-500 text-xs">{item.membersCount} Members</Text>
                 </View>
@@ -86,13 +81,13 @@ export default function TeamScreen() {
             {/* Badges/Action */}
             <View className="items-end">
                 {item.unreadMessagesCount > 0 ? (
-                    <View className="bg-red-600 rounded-full h-6 min-w-[24px] items-center justify-center px-1">
+                    <View className="bg-blue-600 rounded-full h-6 min-w-[24px] items-center justify-center px-1">
                         <Text className="text-white text-[10px] font-bold">
                             {item.unreadMessagesCount > 99 ? '+99' : item.unreadMessagesCount}
                         </Text>
                     </View>
                 ) : item.badgeCount > 0 ? (
-                    <View className="w-2.5 h-2.5 bg-red-600 rounded-full" />
+                    <View className="w-2.5 h-2.5 bg-blue-600 rounded-full" />
                 ) : (
                     <SimpleLineIcons name="arrow-right" size={16} color="#64748b" />
                 )}
@@ -119,6 +114,66 @@ export default function TeamScreen() {
         </View>
     );
 
+    const renderAddModal = () => (
+        <Modal
+            animationType="fade"
+            transparent={true}
+            visible={showAddModal}
+            onRequestClose={() => setShowAddModal(false)}
+        >
+            <View className="flex-1 bg-black/70 justify-center items-center px-4">
+                <TouchableOpacity
+                    className="absolute inset-0"
+                    activeOpacity={1}
+                    onPress={() => setShowAddModal(false)}
+                />
+
+                <View
+                    className="w-full bg-zinc-900 rounded-2xl border border-white/10 p-6 z-50 shadow-2xl"
+                    style={{ shadowColor: '#000', shadowOffset: { width: 0, height: 10 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 20 }}
+                >
+                    <Text className="text-white text-xl font-bold mb-2 text-center">Começar</Text>
+                    <Text className="text-slate-400 text-sm mb-8 text-center">Escolha como você quer iniciar sua jornada</Text>
+
+                    <TouchableOpacity
+                        className="flex-row items-center bg-zinc-800 p-4 rounded-xl mb-4 border border-zinc-700 active:bg-zinc-700"
+                        onPress={handleJoin}
+                    >
+                        <View className="w-10 h-10 rounded-full bg-blue-600/10 items-center justify-center mr-4">
+                            <Ionicons name="log-in-outline" size={24} color="#3b82f6" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-white font-bold text-base">Entrar com Código</Text>
+                            <Text className="text-slate-500 text-xs">Tenho um código de convite</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#52525b" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        className="flex-row items-center bg-zinc-800 p-4 rounded-xl border border-zinc-700 active:bg-zinc-700"
+                        onPress={handleCreate}
+                    >
+                        <View className="w-10 h-10 rounded-full bg-emerald-600/10 items-center justify-center mr-4">
+                            <Ionicons name="add-circle-outline" size={24} color="#10b981" />
+                        </View>
+                        <View className="flex-1">
+                            <Text className="text-white font-bold text-base">Criar Nova Equipe</Text>
+                            <Text className="text-slate-500 text-xs">Sou instrutor ou dono de academia</Text>
+                        </View>
+                        <Ionicons name="chevron-forward" size={20} color="#52525b" />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        className="mt-6 self-center p-2"
+                        onPress={() => setShowAddModal(false)}
+                    >
+                        <Text className="text-zinc-500 font-semibold">Cancelar</Text>
+                    </TouchableOpacity>
+                </View>
+            </View>
+        </Modal>
+    );
+
     return (
         <SafeAreaView className="flex-1 bg-slate-900">
             <StatusBar style="light" />
@@ -134,10 +189,10 @@ export default function TeamScreen() {
             </View>
 
             {/* Content */}
-            <View className="flex-1 px-4">
+            <View className="flex-1 px-4 relative">
                 {loading ? (
                     <View className="flex-1 items-center justify-center">
-                        <ActivityIndicator size="large" color="#dc2626" />
+                        <ActivityIndicator size="large" color="#2563eb" />
                     </View>
                 ) : teams.length > 0 ? (
                     <FlatList
@@ -153,6 +208,8 @@ export default function TeamScreen() {
                     renderEmptyState()
                 )}
             </View>
+
+            {renderAddModal()}
 
         </SafeAreaView>
     );

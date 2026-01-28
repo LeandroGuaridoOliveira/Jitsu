@@ -55,7 +55,7 @@ export default function CreateTeamScreen() {
                 <View className="mb-6">
                     <Text className="text-xs font-bold uppercase text-slate-500 mb-2">Academy Name</Text>
                     <TextInput
-                        className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-red-600"
+                        className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-blue-600"
                         placeholder="e.g. Unity Jiu-Jitsu"
                         placeholderTextColor="#52525b"
                         value={name}
@@ -68,7 +68,7 @@ export default function CreateTeamScreen() {
                     <View className="flex-1">
                         <Text className="text-xs font-bold uppercase text-slate-500 mb-2">Short Code</Text>
                         <TextInput
-                            className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-red-600"
+                            className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-blue-600"
                             placeholder="e.g. UJJ"
                             placeholderTextColor="#52525b"
                             value={acronym}
@@ -80,7 +80,7 @@ export default function CreateTeamScreen() {
                     <View className="flex-1 ml-4">
                         <Text className="text-xs font-bold uppercase text-slate-500 mb-2">Location</Text>
                         <TextInput
-                            className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-red-600"
+                            className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-semibold text-base focus:border-blue-600"
                             placeholder="City, State"
                             placeholderTextColor="#52525b"
                             value={location}
@@ -93,7 +93,7 @@ export default function CreateTeamScreen() {
                 <View className="mb-8">
                     <Text className="text-xs font-bold uppercase text-slate-500 mb-2">Description / Motto</Text>
                     <TextInput
-                        className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-normal text-base focus:border-red-600 min-h-[100px]"
+                        className="bg-zinc-900 border border-zinc-700 text-white rounded-lg p-4 font-normal text-base focus:border-blue-600 min-h-[100px]"
                         placeholder="e.g. A place for everyone."
                         placeholderTextColor="#52525b"
                         value={description}
@@ -105,7 +105,7 @@ export default function CreateTeamScreen() {
 
                 {/* Submit Button */}
                 <TouchableOpacity
-                    className={`bg-red-600 rounded-xl py-4 items-center justify-center shadow-lg shadow-red-900/20 active:opacity-90 ${loading ? 'opacity-70' : ''}`}
+                    className={`bg-blue-600 rounded-xl py-4 items-center justify-center shadow-lg shadow-blue-900/20 active:opacity-90 ${loading ? 'opacity-70' : ''}`}
                     onPress={handleCreate}
                     disabled={loading}
                 >

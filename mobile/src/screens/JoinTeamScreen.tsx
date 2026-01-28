@@ -105,7 +105,7 @@ export default function JoinTeamScreen() {
 
                 {/* Find Button */}
                 <TouchableOpacity
-                    className="bg-red-600 h-14 rounded-2xl items-center justify-center mb-10 active:opacity-90"
+                    className="bg-blue-600 h-14 rounded-2xl items-center justify-center mb-10 active:opacity-90"
                     onPress={handleFindTeam}
                 >
                     <Text className="text-white font-bold text-lg">Find Team</Text>
