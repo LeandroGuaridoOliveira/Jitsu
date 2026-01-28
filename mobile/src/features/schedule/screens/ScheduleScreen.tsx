@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Image } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -95,10 +95,10 @@ export default function ScheduleScreen() {
     const canAddClass = teamMember?.role === 'INSTRUCTOR' || teamMember?.role === 'HEAD_COACH';
 
     const renderHeader = () => (
-        <View className="px-4 py-4 border-b border-white/5 flex-row justify-between items-center bg-slate-900">
+        <View className="px-5 pt-12 pb-4 bg-slate-900 flex-row justify-between items-center">
             <View>
                 <Text className="text-white text-2xl font-bold">Agenda</Text>
-                <Text className="text-slate-400 text-xs font-medium">TREINOS DA SEMANA</Text>
+                <Text className="text-slate-400 text-xs font-medium">TREINOS & HORÁRIOS</Text>
             </View>
             <View className="flex-row gap-3">
                 {canAddClass && (
@@ -120,7 +120,7 @@ export default function ScheduleScreen() {
     );
 
     const renderDayStrip = () => (
-        <View className="py-4 bg-slate-900 border-b border-white/5">
+        <View className="py-2 bg-slate-900">
             <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16 }}>
                 {weekDates.map((item) => {
                     const isSelected = selectedDay === item.key;
@@ -128,15 +128,15 @@ export default function ScheduleScreen() {
                         <TouchableOpacity
                             key={item.key}
                             onPress={() => setSelectedDay(item.key)}
-                            className={`mr-3 py-2 px-3 items-center rounded-xl min-w-[56px] ${isSelected ? 'bg-blue-600' : 'bg-transparent'}`}
+                            className={`mr-3 py-3 px-4 items-center rounded-2xl min-w-[64px] ${isSelected ? 'bg-blue-600' : 'bg-slate-800/50'}`}
                         >
                             <Text className={`text-xs font-bold mb-1 ${isSelected ? 'text-white/80' : 'text-slate-500'}`}>
                                 {item.day}
                             </Text>
-                            <Text className={`text-lg font-bold ${isSelected ? 'text-white' : 'text-slate-400'}`}>
+                            <Text className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-slate-400'}`}>
                                 {item.date}
                             </Text>
-                            {isSelected && <View className="w-1 h-1 rounded-full bg-white mt-1" />}
+                            {isSelected && <View className="w-1.5 h-1.5 rounded-full bg-white mt-1.5" />}
                         </TouchableOpacity>
                     );
                 })}
@@ -144,18 +144,41 @@ export default function ScheduleScreen() {
         </View>
     );
 
+    const renderNextClassCard = () => (
+        <View className="mx-5 mt-2 mb-6">
+            <View className="bg-red-600 rounded-3xl p-6 shadow-xl shadow-red-900/20">
+                <View className="flex-row justify-between items-start mb-5">
+                    <View className="bg-white/20 px-3 py-1.5 rounded-full backdrop-blur-sm self-start">
+                        <Text className="text-white font-bold text-[10px] tracking-wider uppercase">Próxima Aula</Text>
+                    </View>
+                    <View className="flex-row items-center space-x-1.5 bg-black/20 px-2.5 py-1 rounded-lg">
+                        <Ionicons name="time" size={12} color="white" />
+                        <Text className="text-white font-bold text-xs">19:00</Text>
+                    </View>
+                </View>
 
+                <View className="mb-6">
+                    <Text className="text-white text-3xl font-bold mb-1 tracking-tight leading-tight">Jiu-Jitsu Avançado</Text>
+                    <Text className="text-red-100 text-base font-medium">Sensei Renato • Tatame A</Text>
+                </View>
+
+                <TouchableOpacity
+                    className="bg-white w-full py-3.5 rounded-xl items-center shadow-sm active:scale-[0.98] transition-all"
+                    activeOpacity={0.9}
+                    onPress={() => Alert.alert('Check-in', 'Check-in realizado com sucesso!')}
+                >
+                    <Text className="text-red-600 font-extrabold text-sm tracking-widest uppercase">Check-in Agora</Text>
+                </TouchableOpacity>
+            </View>
+        </View>
+    );
 
     return (
         <View className="flex-1 bg-slate-900">
             <StatusBar style="light" />
-            <View className="safe-area-top bg-slate-900" style={{ height: 40 }} />
-            {/* Adjust safe area spacer if not using SafeAreaView directly or if header needs it. 
-                Using View flex-1 + padding top is safer with custom headers usually, 
-                but let's stick to simple Structure. 
-            */}
 
             {renderHeader()}
+
             {renderDayStrip()}
 
             {loading ? (
@@ -166,6 +189,7 @@ export default function ScheduleScreen() {
                 <FlatList
                     data={filteredSchedule}
                     keyExtractor={(item) => item.id}
+                    ListHeaderComponent={renderNextClassCard}
                     renderItem={({ item }) => (
                         <ClassCard
                             item={item}
@@ -179,11 +203,11 @@ export default function ScheduleScreen() {
                             })}
                         />
                     )}
-                    contentContainerStyle={{ paddingBottom: 24, paddingTop: 16 }}
+                    contentContainerStyle={{ paddingBottom: 100, paddingTop: 16 }}
                     ListEmptyComponent={
-                        <View className="items-center justify-center py-20 px-10">
-                            <Ionicons name="calendar-clear-outline" size={48} color="#3f3f46" />
-                            <Text className="text-zinc-500 text-center mt-4">Nenhuma aula agendada para este dia.</Text>
+                        <View className="items-center justify-center py-10 px-10 opacity-50">
+                            <Ionicons name="calendar-clear-outline" size={48} color="#71717a" />
+                            <Text className="text-zinc-500 text-center mt-4">Sem aulas agendadas para este dia.</Text>
                         </View>
                     }
                     showsVerticalScrollIndicator={false}

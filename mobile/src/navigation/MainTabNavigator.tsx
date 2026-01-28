@@ -2,7 +2,6 @@ import React from 'react';
 import { View, TouchableOpacity, Text } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import HomeScreen from '../screens/HomeScreen';
 import ScheduleScreen from '../features/schedule/screens/ScheduleScreen';
 import ProfileScreen from '../features/profile/screens/ProfileScreen';
 import TeamScreen from '../screens/TeamScreen';
@@ -33,20 +32,11 @@ export default function MainTabNavigator() {
             }}
         >
             <Tab.Screen
-                name="Home"
-                component={HomeScreen}
-                options={{
-                    tabBarIcon: ({ color, size }) => <Ionicons name="home" size={24} color={color} />,
-                    tabBarLabel: 'Home'
-                }}
-            />
-
-            <Tab.Screen
                 name="Schedule"
                 component={ScheduleScreen}
                 options={{
-                    tabBarIcon: ({ color, size }) => <Ionicons name="calendar" size={24} color={color} />,
-                    tabBarLabel: 'Agenda'
+                    tabBarIcon: ({ color, size }) => <Ionicons name="home" size={24} color={color} />,
+                    tabBarLabel: 'Início'
                 }}
             />
 
