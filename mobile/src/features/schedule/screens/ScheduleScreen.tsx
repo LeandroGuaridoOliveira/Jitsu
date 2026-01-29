@@ -193,38 +193,28 @@ export default function ScheduleScreen() {
                     data={filteredSchedule}
                     keyExtractor={(item) => item.id}
                     renderItem={({ item, index }) => {
-                        const isLast = index === filteredSchedule.length - 1;
+                        // Mock status for visual demonstration
+                        let mockStatus: 'CONFIRMED' | 'PENDING' | null = null;
+                        const hour = parseInt(item.startTime.split(':')[0]);
+                        if (hour === 19) mockStatus = 'CONFIRMED';
+                        if (hour === 7) mockStatus = 'PENDING';
+
                         return (
-                            <View className="flex-row px-5 mb-2">
-                                {/* Left Column: Time */}
-                                <View className="w-14 items-end mr-4 pt-1">
-                                    <Text className="text-white font-bold text-base">{item.startTime}</Text>
-                                    <Text className="text-slate-500 text-xs font-medium">{item.endTime}</Text>
-
-                                    {/* Vertical Line Connector (Optional Visual Aid for Timeline flow) */}
-                                    {!isLast && (
-                                        <View className="absolute right-[-23px] top-8 bottom-[-8px] width-[1px] bg-zinc-800/50 -z-10" />
-                                    )}
-                                </View>
-
-                                {/* Right Column: Card */}
-                                <View className="flex-1 pb-4">
-                                    <ClassCard
-                                        item={item}
-                                        onPress={() => navigation.navigate('ClassDetails', {
-                                            classId: item.id,
-                                            preview: {
-                                                title: item.title,
-                                                time: `${item.startTime} - ${item.endTime}`,
-                                                instructor: item.instructorIds[0]
-                                            }
-                                        })}
-                                    />
-                                </View>
-                            </View>
+                            <ClassCard
+                                item={item}
+                                status={mockStatus}
+                                onPress={() => navigation.navigate('ClassDetails', {
+                                    classId: item.id,
+                                    preview: {
+                                        title: item.title,
+                                        time: `${item.startTime} - ${item.endTime}`,
+                                        instructor: item.instructorIds[0]
+                                    }
+                                })}
+                            />
                         );
                     }}
-                    contentContainerStyle={{ paddingBottom: 100, paddingTop: 24 }}
+                    contentContainerStyle={{ paddingBottom: 100, paddingTop: 16 }}
                     ListEmptyComponent={
                         <View className="items-center justify-center py-10 px-10 opacity-50">
                             <Ionicons name="calendar-clear-outline" size={48} color="#71717a" />
